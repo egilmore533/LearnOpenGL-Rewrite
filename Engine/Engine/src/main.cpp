@@ -37,6 +37,8 @@ int main()
 		return -1;
 	}
 
+	stbi_set_flip_vertically_on_load(true);
+
 	Shader standard_shader("shaders/standard.vs", "shaders/standard.fs");
 
 	// set up vertex data (and buffer(s)) and configure vertex attributes
