@@ -7,6 +7,8 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+
+#include <glm/glm.hpp>
   
 
 enum Shader_Type
@@ -53,6 +55,8 @@ public:
 	* @param value		value to set the uniform to
 	*/
     void set_float(const std::string &name, float value) const;
+
+	void set_mat4(const std::string &name, glm::mat4 value) const;
 
 private:
 

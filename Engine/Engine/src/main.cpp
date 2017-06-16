@@ -6,6 +6,9 @@
 
 #include <stb_image.h>
 
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include "shader.h"
 
 void process_input(GLFWwindow *window);
@@ -153,6 +156,35 @@ int main()
 		glBindTexture(GL_TEXTURE_2D, texture);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, texture2);
+
+		// create transformations
+		glm::mat4 transform;
+		transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.0f));
+		transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+
+		unsigned int transform_loc = glGetUniformLocation(standard_shader.m_program_id, "transform");
+		glUniformMatrix4fv(transform_loc, 1, GL_FALSE, glm::value_ptr(transform));
+
+
+		standard_shader.use();
+
+		// render the 
+		glBindVertexArray(VAO);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+		// bind textures on corresponding texture units
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texture);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, texture2);
+
+		//second transformations for scaling box over time
+		glm::mat4 transform2;
+		transform2 = glm::translate(transform2, glm::vec3(-0.5f, 0.5f, 0.0f));
+		transform2 = glm::scale(transform2, glm::vec3(sin((float)glfwGetTime())));
+
+		transform_loc = glGetUniformLocation(standard_shader.m_program_id, "transform");
+		glUniformMatrix4fv(transform_loc, 1, GL_FALSE, glm::value_ptr(transform2));
 
 		standard_shader.use();
 
