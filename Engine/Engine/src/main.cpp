@@ -17,6 +17,14 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 const unsigned int SCREEN_WIDTH = 800;
 const unsigned int SCREEN_HEIGHT = 600;
 
+glm::vec3 camera_pos = glm::vec3(0.0f, 0.0f, 3.0f);
+glm::vec3 camera_front = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 camera_up = glm::vec3(0.0f, 1.0f, 0.0f);
+
+float current_time = 0.0f;	// Total Time since start of program
+float delta_time = 0.0f;	// Time between current frame and last frame
+float last_frame = 0.0f;	// Time of last frame
+
 int main()
 {
 	glfwInit();
@@ -183,6 +191,12 @@ int main()
 
 	while (!glfwWindowShouldClose(window))
 	{
+		//get time for this frame
+		current_time = glfwGetTime();
+		delta_time = current_time - last_frame;
+		last_frame = current_time;
+
+
 		process_input(window);
 		//update everything
 
@@ -199,13 +213,14 @@ int main()
 		// activate shader
 		standard_shader.use();
 
-		// create transformations
-		glm::mat4 view;
 		glm::mat4 projection;
-		view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
 		projection = glm::perspective(glm::radians(45.0f), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
 		// note: currently we set the projection matrix each frame, but since the projection matrix rarely changes it's often best practice to set it outside the main loop only once.
 		standard_shader.set_mat4("projection", projection);
+		
+		// camera/view transformation
+		glm::mat4 view;
+		view = glm::lookAt(camera_pos, camera_pos + camera_front, camera_up);
 		standard_shader.set_mat4("view", view);
 
 		// render box
@@ -217,7 +232,7 @@ int main()
 			model = glm::translate(model, cube_positions[i]);
 			if (i % 3 == 0)
 			{
-				model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(1.0f, 0.3f, 0.5f));
+				model = glm::rotate(model, current_time, glm::vec3(1.0f, 0.3f, 0.5f));
 			}
 			else
 			{
@@ -228,12 +243,8 @@ int main()
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
 
-		//// update shader uniform
-		//float timeValue = glfwGetTime();
-		//printf("time: %f\n", timeValue);
-		//float right_offset = 2.0f * sin(timeValue * 2.0f) / 2.0f + 0.5f;
-
-		//standard_shader.set_float("right_offset", right_offset);
+		//// print time
+		//printf("time: %f\n", current_time);
 
 		//END OF DRAW SAWP BUFFERS
 		glfwSwapBuffers(window);
@@ -253,6 +264,16 @@ void process_input(GLFWwindow *window)
 {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
+
+	float camera_speed = 2.5f * delta_time; // adjust accordingly
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+		camera_pos += camera_speed * camera_front;
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+		camera_pos -= camera_speed * camera_front;
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+		camera_pos -= glm::normalize(glm::cross(camera_front, camera_up)) * camera_speed;
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+		camera_pos += glm::normalize(glm::cross(camera_front, camera_up)) * camera_speed;
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
