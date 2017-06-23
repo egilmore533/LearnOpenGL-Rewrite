@@ -10,20 +10,28 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "shader.h"
+#include "camera.h"
 
 void process_input(GLFWwindow *window);
+void mouse_callback(GLFWwindow* window, double x_pos, double y_pos);
+void scroll_callback(GLFWwindow* window, double x_offset, double y_offset);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
 const unsigned int SCREEN_WIDTH = 800;
 const unsigned int SCREEN_HEIGHT = 600;
 
-glm::vec3 camera_pos = glm::vec3(0.0f, 0.0f, 3.0f);
-glm::vec3 camera_front = glm::vec3(0.0f, 0.0f, -1.0f);
-glm::vec3 camera_up = glm::vec3(0.0f, 1.0f, 0.0f);
-
 float current_time = 0.0f;	// Total Time since start of program
 float delta_time = 0.0f;	// Time between current frame and last frame
 float last_frame = 0.0f;	// Time of last frame
+
+///////CAMERA CODE/////////////////
+
+// camera
+Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+float last_x = SCREEN_WIDTH / 2.0f;
+float last_y = SCREEN_HEIGHT / 2.0f;
+bool first_mouse = true;
+
 
 int main()
 {
@@ -40,7 +48,14 @@ int main()
 		return -1;
 	}
 	glfwMakeContextCurrent(window);
+
+	//window callback set up
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetScrollCallback(window, scroll_callback);
+
+	// tell GLFW to capture our mouse
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
@@ -184,10 +199,9 @@ int main()
 	// or set it via the texture class
 	standard_shader.set_int("texture2", 1);
 
+	// configure global opengl state
+	// -----------------------------
 	glEnable(GL_DEPTH_TEST);
-
-	// uncomment this call to draw in wireframe polygons.
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -195,7 +209,6 @@ int main()
 		current_time = glfwGetTime();
 		delta_time = current_time - last_frame;
 		last_frame = current_time;
-
 
 		process_input(window);
 		//update everything
@@ -214,13 +227,12 @@ int main()
 		standard_shader.use();
 
 		glm::mat4 projection;
-		projection = glm::perspective(glm::radians(45.0f), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
+		projection = glm::perspective(glm::radians(camera.m_zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
 		// note: currently we set the projection matrix each frame, but since the projection matrix rarely changes it's often best practice to set it outside the main loop only once.
 		standard_shader.set_mat4("projection", projection);
 		
 		// camera/view transformation
-		glm::mat4 view;
-		view = glm::lookAt(camera_pos, camera_pos + camera_front, camera_up);
+		glm::mat4 view = camera.get_view_matrix();
 		standard_shader.set_mat4("view", view);
 
 		// render box
@@ -265,15 +277,37 @@ void process_input(GLFWwindow *window)
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
 
-	float camera_speed = 2.5f * delta_time; // adjust accordingly
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-		camera_pos += camera_speed * camera_front;
+		camera.process_keyboard(FORWARD, delta_time);
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-		camera_pos -= camera_speed * camera_front;
+		camera.process_keyboard(BACKWARD, delta_time);
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-		camera_pos -= glm::normalize(glm::cross(camera_front, camera_up)) * camera_speed;
+		camera.process_keyboard(LEFT, delta_time);
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-		camera_pos += glm::normalize(glm::cross(camera_front, camera_up)) * camera_speed;
+		camera.process_keyboard(RIGHT, delta_time);
+}
+
+void mouse_callback(GLFWwindow* window, double x_pos, double y_pos)
+{
+	if (first_mouse)
+	{
+		last_x = x_pos;
+		last_y = y_pos;
+		first_mouse = false;
+	}
+
+	float x_offset = x_pos - last_x;
+	float y_offset = last_y - y_pos; // reversed since y-coordinates go from bottom to top
+
+	last_x = x_pos;
+	last_y = y_pos;
+
+	camera.process_mouse_movement(x_offset, y_offset);
+}
+
+void scroll_callback(GLFWwindow* window, double x_offset, double y_offset)
+{
+	camera.process_mouse_scroll(y_offset);
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
