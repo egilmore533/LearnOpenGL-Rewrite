@@ -10,7 +10,10 @@
 
 #include <glm/glm.hpp>
   
-
+/**
+* @enum Shader_Type
+* @brief Defines the different types of shader's a shader id could be
+*/
 enum Shader_Type
 {
 	VERTEX = 0,
@@ -18,6 +21,10 @@ enum Shader_Type
 	PROGRAM
 };
 
+/**
+* @class Camera
+* @brief An abstract camera class that processes input and calculates the corresponding Eular Angles, Vectors and Matrices for use in OpenGL
+*/
 class Shader
 {
 public:
@@ -34,6 +41,8 @@ public:
 	* @brief activate the shader
 	*/
     void use();
+
+	//uniform setters
 
     /**
 	* @brief utility function to set a uniform bool in the shader
@@ -56,22 +65,73 @@ public:
 	*/
     void set_float(const std::string &name, float value) const;
 
+	/**
+	* @brief utility function to set a uniform vec2 in the shader
+	* @param &name		name of the uniform
+	* @param value		value to set the uniform to
+	*/
 	void set_vec2(const std::string &name, const glm::vec2 &value) const;
 
+	/**
+	* @brief utility function to set a uniform vec2 in the shader
+	* @param &name		name of the uniform
+	* @param x			x value to set the uniform to
+	* @param y			y value to set the uniform to
+	*/
 	void set_vec2(const std::string &name, float x, float y) const;
 
+	/**
+	* @brief utility function to set a uniform vec3 in the shader
+	* @param &name		name of the uniform
+	* @param value		value to set the uniform to
+	*/
 	void set_vec3(const std::string &name, const glm::vec3 &value) const;
 
+	/**
+	* @brief utility function to set a uniform vec3 in the shader
+	* @param &name		name of the uniform
+	* @param x			x value to set the uniform to
+	* @param y			y value to set the uniform to
+	* @param z			z value to set the uniform to
+	*/
 	void set_vec3(const std::string &name, float x, float y, float z) const;
 
+	/**
+	* @brief utility function to set a uniform vec4 in the shader
+	* @param &name		name of the uniform
+	* @param value		value to set the uniform to
+	*/
 	void set_vec4(const std::string &name, const glm::vec4 &value) const;
 
+	/**
+	* @brief utility function to set a uniform vec4 in the shader
+	* @param &name		name of the uniform
+	* @param x			x value to set the uniform to
+	* @param y			y value to set the uniform to
+	* @param z			z value to set the uniform to
+	* @param w			w value to set the uniform to
+	*/
 	void set_vec4(const std::string &name, float x, float y, float z, float w) const;
 
+	/**
+	* @brief utility function to set a uniform mat2 in the shader
+	* @param &name		name of the uniform
+	* @param value		value to set the uniform to
+	*/
 	void set_mat2(const std::string &name, const glm::mat2 &mat) const;
 
+	/**
+	* @brief utility function to set a uniform mat3 in the shader
+	* @param &name		name of the uniform
+	* @param value		value to set the uniform to
+	*/
 	void set_mat3(const std::string &name, const glm::mat3 &mat) const;
 
+	/**
+	* @brief utility function to set a uniform mat4 in the shader
+	* @param &name		name of the uniform
+	* @param value		value to set the uniform to
+	*/
 	void set_mat4(const std::string &name, const glm::mat4 &mat) const;
 
 private:
