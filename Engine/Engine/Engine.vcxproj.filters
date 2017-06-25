@@ -19,6 +19,9 @@
     <Filter Include="Shader Files\Standard">
       <UniqueIdentifier>{18b2575c-b274-4c25-89c5-ae6682d55746}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shader Files\Lamp">
+      <UniqueIdentifier>{5151abe3-14bc-4019-a69b-a6479cdc783d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -54,6 +57,12 @@
     </None>
     <None Include="shaders\standard.vs">
       <Filter>Shader Files\Standard</Filter>
+    </None>
+    <None Include="shaders\lamp.fs">
+      <Filter>Shader Files\Lamp</Filter>
+    </None>
+    <None Include="shaders\lamp.vs">
+      <Filter>Shader Files\Lamp</Filter>
     </None>
   </ItemGroup>
 </Project>

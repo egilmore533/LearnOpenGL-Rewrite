@@ -83,7 +83,7 @@ public:
 	* @brief	quick getter for the view matrix from this camera using glm::lookAt
 	* @return	a view matrix made from glm::lookAt
 	*/
-	glm::mat4 get_view_matrix()	{	return glm::lookAt(m_position, m_position + m_front, m_up);	}
+	glm::mat4 get_view_matrix()	{	return glm::lookAt(m_position, m_position + m_front, m_up);		}
 
 	/**
 	* @brief	handles the keyboard input callback
