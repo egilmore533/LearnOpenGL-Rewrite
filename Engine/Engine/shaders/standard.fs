@@ -4,6 +4,7 @@ out vec4 frag_color;
 struct Material {
     sampler2D diffuse_map;
 	sampler2D specular_map;
+	sampler2D emission_map;
     float shininess;
 }; 
 
@@ -40,6 +41,9 @@ void main()
 	float specular_impact = pow(max(dot(view_direction, reflection_direction), 0.0), material.shininess);
 	vec3 specular_component = light.specular * specular_impact * texture(material.specular_map, texture_coordinates).rgb;
 
-	vec3 result = ambient_component + diffuse_component + specular_component;
+	// emission calculation
+    vec3 emission_component = texture(material.emission_map, texture_coordinates).rgb;
+
+	vec3 result = ambient_component + diffuse_component + specular_component + emission_component;
 	frag_color = vec4(result, 1.0);
 }

@@ -166,10 +166,12 @@ int main()
 
 	unsigned int diffuse_map = load_texture("resources/textures/container2.png");
 	unsigned int specular_map = load_texture("resources/textures/container2_specular.png");
+	unsigned int emission_map = load_texture("resources/textures/matrix.png");
 
 	lighting_shader.use();
 	lighting_shader.set_int("material.diffuse_map", 0);
-	lighting_shader.set_int("material.specular_map", 0);
+	lighting_shader.set_int("material.specular_map", 1);
+	lighting_shader.set_int("material.emission_map", 2);
 
 	// configure global opengl state
 	// -----------------------------
@@ -220,6 +222,9 @@ int main()
 		// bind specular map
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, specular_map);
+		// bind emission map
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, emission_map);
 
 		// render box
 		glBindVertexArray(cube_vao);
