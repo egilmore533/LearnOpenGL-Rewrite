@@ -134,15 +134,21 @@ void Shader::check_compile_error(unsigned int shader, Shader_Type type)
 	if (type != PROGRAM)
 	{
 		glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-	}
-	else
-	{
-		glGetProgramiv(shader, GL_LINK_STATUS, &success);
-	}
-
-	if (!success)
+		if (!success)
 		{
 			glGetShaderInfoLog(shader, 1024, NULL, info_log);
 			printf("ERROR::SHADER_COMPILATION_ERROR of type: %d\n%s\n-- --------------------------------------------------- --\n", type, info_log);
 		}
+	}
+	else
+	{
+		glGetProgramiv(shader, GL_LINK_STATUS, &success);
+		if (!success)
+		{
+			glGetProgramInfoLog(shader, 1024, NULL, info_log);
+			printf("ERROR::PROGRAM_LINKING_ERROR of type: %d\n%s\n-- --------------------------------------------------- --\n", type, info_log);
+		}
+	}
+
+	
 }
