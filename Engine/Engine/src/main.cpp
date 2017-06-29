@@ -182,19 +182,34 @@ int main()
 
 		// activate shader
 		lighting_shader.use();
-		lighting_shader.set_vec3("object_color", 1.0f, 0.5f, 0.31f);
-		lighting_shader.set_vec3("light_color", 1.0f, 1.0f, 1.0f);
-		lighting_shader.set_vec3("light_position", light_position);
+
+		// camera/view transformation
+		glm::mat4 view = camera.get_view_matrix();
+		lighting_shader.set_mat4("view", view);
+
 		lighting_shader.set_vec3("view_position", camera.m_position);
+
+		lighting_shader.set_vec3("light.position", glm::vec3(view * glm::vec4(light_position, 1.0f)));
+
+		glm::vec3 light_color;
+		light_color.x = sin(glfwGetTime() * 2.0f);
+		light_color.y = sin(glfwGetTime() * 0.7f);
+		light_color.z = sin(glfwGetTime() * 1.3f);
+		glm::vec3 diffuse_color = light_color * glm::vec3(0.5f);
+		glm::vec3 ambient_color = diffuse_color * glm::vec3(0.2f);
+		lighting_shader.set_vec3("light.ambient", 1.0f, 1.0f, 1.0f);
+		lighting_shader.set_vec3("light.diffuse", 1.0f, 1.0f, 1.0f);
+		lighting_shader.set_vec3("light.specular", 1.0f, 1.0f, 1.0f);
+
+		lighting_shader.set_vec3("material.ambient", 0.25f, 0.25f, 0.25f);
+		lighting_shader.set_vec3("material.diffuse", 0.4f, 0.4f, 0.4f);
+		lighting_shader.set_vec3("material.specular", 0.774597f, 0.774597f, 0.50196078);
+		lighting_shader.set_float("material.shininess", 64.0f);
 
 		glm::mat4 projection;
 		projection = glm::perspective(glm::radians(camera.m_zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
 		// note: currently we set the projection matrix each frame, but since the projection matrix rarely changes it's often best practice to set it outside the main loop only once.
 		lighting_shader.set_mat4("projection", projection);
-		
-		// camera/view transformation
-		glm::mat4 view = camera.get_view_matrix();
-		lighting_shader.set_mat4("view", view);
 
 		// render box
 		glBindVertexArray(cube_vao);
