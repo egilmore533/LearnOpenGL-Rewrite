@@ -177,6 +177,9 @@ int main()
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		light_position.x = 2 * sin(current_time + 1.2f);
+		light_position.z = 2 * sin(current_time + 2.0f);
+
 		// activate shader
 		lighting_shader.use();
 		lighting_shader.set_vec3("object_color", 1.0f, 0.5f, 0.31f);
@@ -199,6 +202,7 @@ int main()
 		for (int i = 0; i < 10; i++)
 		{
 			glm::mat4 model;
+			glm::mat3 normal_matrix;
 			model = glm::translate(model, cube_positions[i]);
 			if (i % 3 == 0)
 			{
@@ -210,6 +214,9 @@ int main()
 				model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
 			}
 			lighting_shader.set_mat4("model", model);
+
+			normal_matrix = glm::mat3(glm::transpose(glm::inverse(view * model)));
+			lighting_shader.set_mat3("normal_matrix", normal_matrix);
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
 
