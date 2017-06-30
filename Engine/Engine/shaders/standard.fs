@@ -9,12 +9,16 @@ struct Material {
 }; 
 
 struct Light {
-    //vec3 position;
-	vec3 direction;
+    vec3 position;
+	//vec3 direction;
 
     vec3 ambient;
     vec3 diffuse;
     vec3 specular;
+
+	float attenuation_constant;
+    float attenuation_linear;
+    float attenuation_quadratic;
 };
 
 in vec3 fragment_position;
@@ -32,7 +36,7 @@ void main()
 
 	//diffuse calculation
 	vec3 norm = normalize(normal);
-	vec3 light_direction =  normalize(-light.direction);
+	vec3 light_direction =  normalize(light.position - fragment_position);
 	float diffuse_impact = max(dot(norm, light_direction), 0.0);
 	vec3 diffuse_component = light.diffuse * diffuse_impact * texture(material.diffuse_map, texture_coordinates).rgb;
 
@@ -43,7 +47,15 @@ void main()
 	vec3 specular_component = light.specular * specular_impact * texture(material.specular_map, texture_coordinates).rgb;
 
 	// emission calculation
-    vec3 emission_component = texture(material.emission_map, texture_coordinates).rgb;
+    //vec3 emission_component = texture(material.emission_map, texture_coordinates).rgb;
+
+	// attenuation calculation
+    float distance    = length(light.position - fragment_position);
+    float attenuation = 1.0 / (light.attenuation_constant + light.attenuation_linear * distance + light.attenuation_quadratic * (distance * distance));    
+
+    ambient_component  *= attenuation;  
+    diffuse_component  *= attenuation;
+    specular_component *= attenuation;  
 
 	vec3 result = ambient_component + diffuse_component + specular_component;
 	frag_color = vec4(result, 1.0);
