@@ -202,7 +202,8 @@ int main()
 		lighting_shader.set_mat4("view", view);
 
 		lighting_shader.set_vec3("view_position", camera.m_position);
-		lighting_shader.set_vec3("light.position", glm::vec3(view * glm::vec4(light_position, 1.0f)));
+		lighting_shader.set_vec3("light.direction", -0.2f, -1.0f, -0.3f);
+		//lighting_shader.set_vec3("light.position", glm::vec3(view * glm::vec4(light_position, 1.0f)));
 
 		lighting_shader.set_vec3("light.ambient", 0.2f, 0.2f, 0.2f);
 		lighting_shader.set_vec3("light.diffuse", 0.5f, 0.5f, 0.5f);
