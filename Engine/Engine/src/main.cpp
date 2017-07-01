@@ -201,12 +201,15 @@ int main()
 		glm::mat4 view = camera.get_view_matrix();
 		lighting_shader.set_mat4("view", view);
 
-		lighting_shader.set_vec3("view_position", camera.m_position);
-		//lighting_shader.set_vec3("light.direction", -0.2f, -1.0f, -0.3f);
-		lighting_shader.set_vec3("light.position", glm::vec3(view * glm::vec4(light_position, 1.0f)));
+		//we do calculations in view space so this isn't needed and it's assumed to be 0,0,0
+		//lighting_shader.set_vec3("view_position", camera.m_position);
+		lighting_shader.set_vec3("light.direction", glm::vec3(view * glm::vec4(camera.m_front, 0.0f)));
+		lighting_shader.set_vec3("light.position", glm::vec3(view * glm::vec4(camera.m_position, 1.0f)));
+		lighting_shader.set_float("light.cut_off", glm::cos(glm::radians(12.5f)));
+		
 
-		lighting_shader.set_vec3("light.ambient", 0.2f, 0.2f, 0.2f);
-		lighting_shader.set_vec3("light.diffuse", 0.5f, 0.5f, 0.5f);
+		lighting_shader.set_vec3("light.ambient", 0.1f, 0.1f, 0.1f);
+		lighting_shader.set_vec3("light.diffuse", 0.8f, 0.8f, 0.8f);
 		lighting_shader.set_vec3("light.specular", 1.0f, 1.0f, 1.0f);
 
 		lighting_shader.set_float("light.attenuation_constant", 1.0f);
