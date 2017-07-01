@@ -33,42 +33,39 @@ uniform Light light;
 
 void main()
 {
+	//ambient calculation
+	vec3 ambient_component = light.ambient * texture(material.diffuse_map, texture_coordinates).rgb;
+
+	//diffuse calculation
+	vec3 norm = normalize(normal);
 	vec3 light_direction = normalize(light.position - fragment_position);
-	float theta = dot(light_direction, normalize(-light.direction));
+	float diffuse_impact = max(dot(norm, light_direction), 0.0);
+	vec3 diffuse_component = light.diffuse * diffuse_impact * texture(material.diffuse_map, texture_coordinates).rgb;
 
-	if(theta > light.cut_off)
-	{
-		//ambient calculation
-		vec3 ambient_component = light.ambient * texture(material.diffuse_map, texture_coordinates).rgb;
+	//specular calculation
+	vec3 view_direction = normalize(-fragment_position); // the viewer is always at (0,0,0) in view-space, so view_direction is (0,0,0) - Position => -Position
+	vec3 reflection_direction = reflect(-light_direction, norm);
+	float specular_impact = pow(max(dot(view_direction, reflection_direction), 0.0), material.shininess);
+	vec3 specular_component = light.specular * specular_impact * texture(material.specular_map, texture_coordinates).rgb;
 
-		//diffuse calculation
-		vec3 norm = normalize(normal);
-		float diffuse_impact = max(dot(norm, light_direction), 0.0);
-		vec3 diffuse_component = light.diffuse * diffuse_impact * texture(material.diffuse_map, texture_coordinates).rgb;
+	// emission calculation
+	//vec3 emission_component = texture(material.emission_map, texture_coordinates).rgb;
 
-		//specular calculation
-		vec3 view_direction = normalize(-fragment_position); // the viewer is always at (0,0,0) in view-space, so view_direction is (0,0,0) - Position => -Position
-		vec3 reflection_direction = reflect(-light_direction, norm);
-		float specular_impact = pow(max(dot(view_direction, reflection_direction), 0.0), material.shininess);
-		vec3 specular_component = light.specular * specular_impact * texture(material.specular_map, texture_coordinates).rgb;
+	float theta		= dot(light_direction, normalize(-light.direction));
+	float epsilon	= light.cut_off - light.outer_cut_off;
+	float intensity	= clamp((theta - light.outer_cut_off) / epsilon, 0.0, 1.0);
+	diffuse_component	*= intensity;
+	specular_component	*= intensity;
 
-		// emission calculation
-		//vec3 emission_component = texture(material.emission_map, texture_coordinates).rgb;
+	// attenuation calculation
+	float distance    = length(light.position - fragment_position);
+	float attenuation = 1.0 / (light.attenuation_constant + light.attenuation_linear * distance + light.attenuation_quadratic * (distance * distance));    
 
-		// attenuation calculation
-		float distance    = length(light.position - fragment_position);
-		float attenuation = 1.0 / (light.attenuation_constant + light.attenuation_linear * distance + light.attenuation_quadratic * (distance * distance));    
+	//leave ambient unaffected so we always have some light
+	//ambient_component  *= attenuation;  
+	diffuse_component  *= attenuation;
+	specular_component *= attenuation;  
 
-		//ambient_component  *= attenuation;  
-		diffuse_component  *= attenuation;
-		specular_component *= attenuation;  
-
-		vec3 result = ambient_component + diffuse_component + specular_component;
-		frag_color = vec4(result, 1.0);
-	}
-	else 
-    {
-        // else, use ambient light so scene isn't completely dark outside the spotlight.
-        frag_color = vec4(light.ambient * texture(material.diffuse_map, texture_coordinates).rgb, 1.0);
-    }	
+	vec3 result = ambient_component + diffuse_component + specular_component;
+	frag_color = vec4(result, 1.0);
 }
