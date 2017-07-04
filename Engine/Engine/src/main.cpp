@@ -134,6 +134,13 @@ int main()
 		glm::vec3(-1.3f,  1.0f, -1.5f)
 	};
 
+	glm::vec3 point_light_positions[] = {
+		glm::vec3(0.7f,  0.2f,  2.0f),
+		glm::vec3(2.3f, -3.3f, -4.0f),
+		glm::vec3(-4.0f,  2.0f, -12.0f),
+		glm::vec3(0.0f,  0.0f, -3.0f)
+	};
+
 	unsigned int vbo, cube_vao;
 	glGenVertexArrays(1, &cube_vao);
 	glGenBuffers(1, &vbo);
@@ -201,21 +208,60 @@ int main()
 		glm::mat4 view = camera.get_view_matrix();
 		lighting_shader.set_mat4("view", view);
 
-		//we do calculations in view space so this isn't needed and it's assumed to be 0,0,0
-		//lighting_shader.set_vec3("view_position", camera.m_position);
-		lighting_shader.set_vec3("light.direction", glm::vec3(view * glm::vec4(camera.m_front, 0.0f)));
-		lighting_shader.set_vec3("light.position", glm::vec3(view * glm::vec4(camera.m_position, 1.0f)));
-		lighting_shader.set_float("light.cut_off", glm::cos(glm::radians(12.5f)));
-		lighting_shader.set_float("light.outer_cut_off", glm::cos(glm::radians(17.5f)));
-		
-
-		lighting_shader.set_vec3("light.ambient", 0.1f, 0.1f, 0.1f);
-		lighting_shader.set_vec3("light.diffuse", 0.8f, 0.8f, 0.8f);
-		lighting_shader.set_vec3("light.specular", 1.0f, 1.0f, 1.0f);
-
-		lighting_shader.set_float("light.attenuation_constant", 1.0f);
-		lighting_shader.set_float("light.attenuation_linear", 0.09f);
-		lighting_shader.set_float("light.attenuation_quadratic", 0.032f);
+		/*
+		Here we set all the uniforms for the 5/6 types of lights we have. We have to set them manually and index
+		the proper PointLight struct in the array to set each uniform variable. This can be done more code-friendly
+		by defining light types as classes and set their values in there, or by using a more efficient uniform approach
+		by using 'Uniform buffer objects', but that is something we'll discuss in the 'Advanced GLSL' tutorial.
+		*/
+		// directional light
+		lighting_shader.set_vec3("directional_light.direction", -0.2f, -1.0f, -0.3f);
+		lighting_shader.set_vec3("directional_light.ambient", 0.05f, 0.05f, 0.05f);
+		lighting_shader.set_vec3("directional_light.diffuse", 0.4f, 0.4f, 0.4f);
+		lighting_shader.set_vec3("directional_light.specular", 0.5f, 0.5f, 0.5f);
+		// point light 1
+		lighting_shader.set_vec3("point_lights[0].position", glm::vec3(view * glm::vec4(point_light_positions[0], 1.0f)));
+		lighting_shader.set_vec3("point_lights[0].ambient", 0.05f, 0.05f, 0.05f);
+		lighting_shader.set_vec3("point_lights[0].diffuse", 0.8f, 0.8f, 0.8f);
+		lighting_shader.set_vec3("point_lights[0].specular", 1.0f, 1.0f, 1.0f);
+		lighting_shader.set_float("point_lights[0].attenuation_constant", 1.0f);
+		lighting_shader.set_float("point_lights[0].attenuation_linear", 0.09);
+		lighting_shader.set_float("point_lights[0].attenuation_quadratic", 0.032);
+		// point light 2
+		lighting_shader.set_vec3("point_lights[1].position", glm::vec3(view * glm::vec4(point_light_positions[1], 1.0f)));
+		lighting_shader.set_vec3("point_lights[1].ambient", 0.05f, 0.05f, 0.05f);
+		lighting_shader.set_vec3("point_lights[1].diffuse", 0.8f, 0.8f, 0.8f);
+		lighting_shader.set_vec3("point_lights[1].specular", 1.0f, 1.0f, 1.0f);
+		lighting_shader.set_float("point_lights[1].attenuation_constant", 1.0f);
+		lighting_shader.set_float("point_lights[1].attenuation_linear", 0.09);
+		lighting_shader.set_float("point_lights[1].attenuation_quadratic", 0.032);
+		// point light 3
+		lighting_shader.set_vec3("point_lights[2].position", glm::vec3(view * glm::vec4(point_light_positions[2], 1.0f)));
+		lighting_shader.set_vec3("point_lights[2].ambient", 0.05f, 0.05f, 0.05f);
+		lighting_shader.set_vec3("point_lights[2].diffuse", 0.8f, 0.8f, 0.8f);
+		lighting_shader.set_vec3("point_lights[2].specular", 1.0f, 1.0f, 1.0f);
+		lighting_shader.set_float("point_lights[2].attenuation_constant", 1.0f);
+		lighting_shader.set_float("point_lights[2].attenuation_linear", 0.09);
+		lighting_shader.set_float("point_lights[2].attenuation_quadratic", 0.032);
+		// point light 4
+		lighting_shader.set_vec3("point_lights[3].position", glm::vec3(view * glm::vec4(point_light_positions[3], 1.0f)));
+		lighting_shader.set_vec3("point_lights[3].ambient", 0.05f, 0.05f, 0.05f);
+		lighting_shader.set_vec3("point_lights[3].diffuse", 0.8f, 0.8f, 0.8f);
+		lighting_shader.set_vec3("point_lights[3].specular", 1.0f, 1.0f, 1.0f);
+		lighting_shader.set_float("point_lights[3].attenuation_constant", 1.0f);
+		lighting_shader.set_float("point_lights[3].attenuation_linear", 0.09);
+		lighting_shader.set_float("point_lights[3].attenuation_quadratic", 0.032);
+		// spot_light
+		lighting_shader.set_vec3("spot_light.position", glm::vec3(view * glm::vec4(camera.m_position, 1.0f)));
+		lighting_shader.set_vec3("spot_light.direction", glm::vec3(view * glm::vec4(camera.m_front, 0.0f)));
+		lighting_shader.set_vec3("spot_light.ambient", 0.0f, 0.0f, 0.0f);
+		lighting_shader.set_vec3("spot_light.diffuse", 1.0f, 1.0f, 1.0f);
+		lighting_shader.set_vec3("spot_light.specular", 1.0f, 1.0f, 1.0f);
+		lighting_shader.set_float("spot_light.attenuation_constant", 1.0f);
+		lighting_shader.set_float("spot_light.attenuation_linear", 0.09);
+		lighting_shader.set_float("spot_light.attenuation_quadratic", 0.032);
+		lighting_shader.set_float("spot_light.cut_off", glm::cos(glm::radians(12.5f)));
+		lighting_shader.set_float("spot_light.outer_cut_off", glm::cos(glm::radians(15.0f)));
 
 		lighting_shader.set_vec3("material.specular", 0.5f, 0.5f, 0.5f);
 		lighting_shader.set_float("material.shininess", 64.0f);
@@ -267,15 +313,16 @@ int main()
 		lamp_shader.set_mat4("projection", projection);
 		lamp_shader.set_mat4("view", view);
 
-		glm::mat4 model;
-		model = glm::mat4();
-		model = glm::translate(model, light_position);
-
-		model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
-		lamp_shader.set_mat4("model", model);
-
 		glBindVertexArray(light_vao);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
+		for (int i = 0; i < 4; i++)
+		{
+			glm::mat4 model;
+			model = glm::mat4();
+			model = glm::translate(model, point_light_positions[i]);
+			model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
+			lamp_shader.set_mat4("model", model);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
 
 		//END OF DRAW SAWP BUFFERS
 		glfwSwapBuffers(window);
