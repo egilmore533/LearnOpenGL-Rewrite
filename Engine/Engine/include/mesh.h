@@ -20,7 +20,9 @@ enum Texture_Type
 {
 	DIFFUSE_MAP = 0,
 	SPECULAR_MAP,
-	EMISSION_MAP
+	EMISSION_MAP,
+	NORMAL_MAP,
+	HEIGHT_MAP
 };
 
 /**
@@ -40,6 +42,7 @@ struct texture
 {
 	unsigned int id;		/**< the id to reference the texture object  */
 	Texture_Type type;		/**< the texture type, which is when sending the texture to the shader program */
+	aiString path;			/**< the path of the texture to compare with other textures */
 };
 
 /**
@@ -64,7 +67,7 @@ public:
 	* @brief	draws the mesh with the given shader program by binding each texture and using glDrawElements
 	* @param shader		the shader program sed to draw this Mesh
 	*/
-	void Draw(Shader shader);
+	void draw(Shader shader);
 
 	//Mesh Data
 	std::vector<vertex> m_vertices; 			/**< a vector of all the vertices in this Mesh, each containing position, normal, and texture_coordinates */

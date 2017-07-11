@@ -11,6 +11,7 @@
 
 #include "shader.h"
 #include "camera.h"
+#include "model.h"
 
 void process_input(GLFWwindow *window);
 void mouse_callback(GLFWwindow* window, double x_pos, double y_pos);
@@ -170,15 +171,10 @@ int main()
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
-
-	unsigned int diffuse_map = load_texture("resources/textures/container2.png");
-	unsigned int specular_map = load_texture("resources/textures/container2_specular.png");
-	unsigned int emission_map = load_texture("resources/textures/matrix.png");
-
-	lighting_shader.use();
-	lighting_shader.set_int("material.diffuse_map", 0);
-	lighting_shader.set_int("material.specular_map", 1);
-	lighting_shader.set_int("material.emission_map", 2);
+	
+	// load models
+	// -----------
+	Model ourModel("resources/objects/nanosuit/nanosuit.obj");
 
 	// configure global opengl state
 	// -----------------------------
@@ -197,9 +193,6 @@ int main()
 		//draw/render everything
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		light_position.x = 2 * sin(current_time + 1.2f);
-		light_position.z = 2 * sin(current_time + 2.0f);
 
 		// activate shader
 		lighting_shader.use();
@@ -271,39 +264,18 @@ int main()
 		// note: currently we set the projection matrix each frame, but since the projection matrix rarely changes it's often best practice to set it outside the main loop only once.
 		lighting_shader.set_mat4("projection", projection);
 
-		// bind diffuse map
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, diffuse_map);
-		// bind specular map
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, specular_map);
-		// bind emission map
-		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, emission_map);
+		
+		// render the loaded model
+		glm::mat4 model;
+		glm::mat3 normal_matrix;
+		model = glm::translate(model, glm::vec3(0.0f, -1.75f, 0.0f)); // translate it down so it's at the center of the scene
+		model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));	// it's a bit too big for our scene, so scale it down
+		lighting_shader.set_mat4("model", model);
 
-		// render box
-		glBindVertexArray(cube_vao);
+		normal_matrix = glm::mat3(glm::transpose(glm::inverse(view * model)));
+		lighting_shader.set_mat3("normal_matrix", normal_matrix);
 
-		for (int i = 0; i < 10; i++)
-		{
-			glm::mat4 model;
-			glm::mat3 normal_matrix;
-			model = glm::translate(model, cube_positions[i]);
-			if (i % 3 == 0)
-			{
-				model = glm::rotate(model, current_time, glm::vec3(1.0f, 0.3f, 0.5f));
-			}
-			else
-			{
-				float angle = 20.0f * i;
-				model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-			}
-			lighting_shader.set_mat4("model", model);
-
-			normal_matrix = glm::mat3(glm::transpose(glm::inverse(view * model)));
-			lighting_shader.set_mat3("normal_matrix", normal_matrix);
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-		}
+		ourModel.draw(lighting_shader);
 
 		//// print time
 		//printf("time: %f\n", current_time);
@@ -312,6 +284,9 @@ int main()
 		lamp_shader.use();
 		lamp_shader.set_mat4("projection", projection);
 		lamp_shader.set_mat4("view", view);
+
+		// render box
+		glBindVertexArray(cube_vao);
 
 		glBindVertexArray(light_vao);
 		for (int i = 0; i < 4; i++)

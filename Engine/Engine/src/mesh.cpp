@@ -9,12 +9,14 @@ Mesh::Mesh(std::vector<vertex> vertices, std::vector<unsigned int> indices, std:
 	setup_mesh();
 }
 
-void Mesh::Draw(Shader shader)
+void Mesh::draw(Shader shader)
 {
 	int diffuse_num = 1;
 	int specular_num = 1;
 	int emission_num = 1;
-	
+	int normal_num = 1;
+	int height_num = 1;
+
 	for (int i = 0; i < m_textures.size(); i++)
 	{
 		glActiveTexture(GL_TEXTURE0 + i);
@@ -31,6 +33,12 @@ void Mesh::Draw(Shader shader)
 			break;
 		case EMISSION_MAP:
 			name = "emission_map" + emission_num++;
+			break;
+		case NORMAL_MAP:
+			name = "normal_map" + normal_num++;
+			break;
+		case HEIGHT_MAP:
+			name = "height_map" + height_num++;
 			break;
 		}
 
