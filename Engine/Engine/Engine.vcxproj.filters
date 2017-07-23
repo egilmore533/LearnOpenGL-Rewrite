@@ -22,6 +22,9 @@
     <Filter Include="Shader Files\Lamp">
       <UniqueIdentifier>{5151abe3-14bc-4019-a69b-a6479cdc783d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shader Files\OutlineShader">
+      <UniqueIdentifier>{ee52c43c-424d-4599-8320-6b21f19317d1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -75,6 +78,9 @@
     </None>
     <None Include="shaders\lamp.vs">
       <Filter>Shader Files\Lamp</Filter>
+    </None>
+    <None Include="shaders\outline.fs">
+      <Filter>Shader Files\OutlineShader</Filter>
     </None>
   </ItemGroup>
 </Project>

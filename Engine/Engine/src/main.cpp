@@ -74,6 +74,8 @@ int main()
 
 	Shader lamp_shader("shaders/lamp.vs", "shaders/lamp.fs");
 
+	Shader outline_shader("shaders/standard.vs", "shaders/outline.fs");
+
 	// set up vertex data (and buffer(s)) and configure vertex attributes
 	// ------------------------------------------------------------------
 	float vertices[] = {
@@ -174,11 +176,15 @@ int main()
 	
 	// load models
 	// -----------
-	Model ourModel("resources/objects/nanosuit/nanosuit.obj");
+	Model nanosuit("resources/objects/nanosuit/nanosuit.obj");
 
 	// configure global opengl state
 	// -----------------------------
 	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
+	glEnable(GL_STENCIL_TEST);
+	glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -191,15 +197,52 @@ int main()
 		//update everything
 
 		//draw/render everything
-		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		// activate shader
-		lighting_shader.use();
+		glClearColor(0.8f, 0.3f, 0.3f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 		// camera/view transformation
 		glm::mat4 view = camera.get_view_matrix();
+
+		glm::mat4 projection;
+		projection = glm::perspective(glm::radians(camera.m_zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
+		// note: currently we set the projection matrix each frame, but since the projection matrix rarely changes it's often best practice to set it outside the main loop only once.
+
+		// set uniforms
+		outline_shader.use();
+		outline_shader.set_mat4("view", view);
+		outline_shader.set_mat4("projection", projection);
+
+
+		// draw the object's first without writing to stencil
+		glStencilMask(0x00);
+
+		// 1st. render pass, draw objects as normal, writing to the stencil buffer
+		// --------------------------------------------------------------------
+		glStencilFunc(GL_ALWAYS, 1, 0xFF);
+		glStencilMask(0xFF);
+
+		lamp_shader.use();
+		lamp_shader.set_mat4("projection", projection);
+		lamp_shader.set_mat4("view", view);
+
+		// render boxes
+		glBindVertexArray(cube_vao);
+
+		glBindVertexArray(light_vao);
+		for (int i = 0; i < 4; i++)
+		{
+			glm::mat4 model;
+			model = glm::mat4();
+			model = glm::translate(model, point_light_positions[i]);
+			model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
+			lamp_shader.set_mat4("model", model);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
+
+		// activate shader
+		lighting_shader.use();
 		lighting_shader.set_mat4("view", view);
+		lighting_shader.set_mat4("projection", projection);
 
 		/*
 		Here we set all the uniforms for the 5/6 types of lights we have. We have to set them manually and index
@@ -259,33 +302,31 @@ int main()
 		lighting_shader.set_vec3("material.specular", 0.5f, 0.5f, 0.5f);
 		lighting_shader.set_float("material.shininess", 64.0f);
 
-		glm::mat4 projection;
-		projection = glm::perspective(glm::radians(camera.m_zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
-		// note: currently we set the projection matrix each frame, but since the projection matrix rarely changes it's often best practice to set it outside the main loop only once.
-		lighting_shader.set_mat4("projection", projection);
-
 		
 		// render the loaded model
 		glm::mat4 model;
 		glm::mat3 normal_matrix;
 		model = glm::translate(model, glm::vec3(0.0f, -1.75f, 0.0f)); // translate it down so it's at the center of the scene
-		model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));	// it's a bit too big for our scene, so scale it down
+		model = glm::scale(model, glm::vec3(0.2f));	// it's a bit too big for our scene, so scale it down
 		lighting_shader.set_mat4("model", model);
 
 		normal_matrix = glm::mat3(glm::transpose(glm::inverse(view * model)));
 		lighting_shader.set_mat3("normal_matrix", normal_matrix);
 
-		ourModel.draw(lighting_shader);
+		nanosuit.draw(lighting_shader);
 
-		//// print time
-		//printf("time: %f\n", current_time);
+		// 2nd. render pass: now draw slightly scaled versions of the objects, this time disabling stencil writing.
+		// Because the stencil buffer is now filled with several 1s. The parts of the buffer that are 1 are not drawn, thus only drawing 
+		// the objects' size differences, making it look like borders.
+		// -----------------------------------------------------------------------------------------------------------------------------
+		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+		glStencilMask(0x00);
+		glDisable(GL_DEPTH_TEST);
+		outline_shader.use();
 
-		// also draw the lamp object
-		lamp_shader.use();
-		lamp_shader.set_mat4("projection", projection);
-		lamp_shader.set_mat4("view", view);
+		float outline_thickness = 1.1f;
 
-		// render box
+		// render boxes
 		glBindVertexArray(cube_vao);
 
 		glBindVertexArray(light_vao);
@@ -294,10 +335,27 @@ int main()
 			glm::mat4 model;
 			model = glm::mat4();
 			model = glm::translate(model, point_light_positions[i]);
-			model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
-			lamp_shader.set_mat4("model", model);
+			model = glm::scale(model, glm::vec3(0.2f * 1.1f)); // a smaller cube
+			outline_shader.set_mat4("model", model);
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
+
+		// draw objects again using outline shader, scaling them accordingly
+		model = glm::mat4();
+		model = glm::translate(model, glm::vec3(0.0f, outline_thickness * -1.75f, 0.0f)); // translate it down so it's at the center of the scene
+		model = glm::scale(model, glm::vec3(0.2f * outline_thickness));	// it's a bit too big for our scene, so scale it down
+		outline_shader.set_mat4("model", model);
+
+		normal_matrix = glm::mat3(glm::transpose(glm::inverse(view * model)));
+		outline_shader.set_mat3("normal_matrix", normal_matrix);
+
+		nanosuit.draw(outline_shader);
+
+		glStencilMask(0xFF);
+		glEnable(GL_DEPTH_TEST);
+
+		//// print time
+		//printf("time: %f\n", current_time);
 
 		//END OF DRAW SAWP BUFFERS
 		glfwSwapBuffers(window);

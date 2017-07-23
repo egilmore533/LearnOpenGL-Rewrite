@@ -65,7 +65,7 @@ public:
 
 	/**
 	* @brief	draws the mesh with the given shader program by binding each texture and using glDrawElements
-	* @param shader		the shader program sed to draw this Mesh
+	* @param shader		the shader program to draw this Mesh
 	*/
 	void draw(Shader shader);
 

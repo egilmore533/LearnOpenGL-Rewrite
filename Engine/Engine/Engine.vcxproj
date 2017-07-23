@@ -172,6 +172,7 @@
   <ItemGroup>
     <None Include="shaders\lamp.fs" />
     <None Include="shaders\lamp.vs" />
+    <None Include="shaders\outline.fs" />
     <None Include="shaders\standard.fs" />
     <None Include="shaders\standard.vs" />
   </ItemGroup>
