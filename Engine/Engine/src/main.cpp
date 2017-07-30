@@ -182,9 +182,6 @@ int main()
 	// -----------------------------
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
-	glEnable(GL_STENCIL_TEST);
-	glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -211,15 +208,6 @@ int main()
 		outline_shader.use();
 		outline_shader.set_mat4("view", view);
 		outline_shader.set_mat4("projection", projection);
-
-
-		// draw the object's first without writing to stencil
-		glStencilMask(0x00);
-
-		// 1st. render pass, draw objects as normal, writing to the stencil buffer
-		// --------------------------------------------------------------------
-		glStencilFunc(GL_ALWAYS, 1, 0xFF);
-		glStencilMask(0xFF);
 
 		lamp_shader.use();
 		lamp_shader.set_mat4("projection", projection);
@@ -314,48 +302,6 @@ int main()
 		lighting_shader.set_mat3("normal_matrix", normal_matrix);
 
 		nanosuit.draw(lighting_shader);
-
-		// 2nd. render pass: now draw slightly scaled versions of the objects, this time disabling stencil writing.
-		// Because the stencil buffer is now filled with several 1s. The parts of the buffer that are 1 are not drawn, thus only drawing 
-		// the objects' size differences, making it look like borders.
-		// -----------------------------------------------------------------------------------------------------------------------------
-		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-		glStencilMask(0x00);
-		glDisable(GL_DEPTH_TEST);
-		outline_shader.use();
-
-		float outline_thickness = 1.1f;
-
-		// render boxes
-		glBindVertexArray(cube_vao);
-
-		glBindVertexArray(light_vao);
-		for (int i = 0; i < 4; i++)
-		{
-			glm::mat4 model;
-			model = glm::mat4();
-			model = glm::translate(model, point_light_positions[i]);
-			model = glm::scale(model, glm::vec3(0.2f * 1.1f)); // a smaller cube
-			outline_shader.set_mat4("model", model);
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-		}
-
-		// draw objects again using outline shader, scaling them accordingly
-		model = glm::mat4();
-		model = glm::translate(model, glm::vec3(0.0f, outline_thickness * -1.75f, 0.0f)); // translate it down so it's at the center of the scene
-		model = glm::scale(model, glm::vec3(0.2f * outline_thickness));	// it's a bit too big for our scene, so scale it down
-		outline_shader.set_mat4("model", model);
-
-		normal_matrix = glm::mat3(glm::transpose(glm::inverse(view * model)));
-		outline_shader.set_mat3("normal_matrix", normal_matrix);
-
-		nanosuit.draw(outline_shader);
-
-		glStencilMask(0xFF);
-		glEnable(GL_DEPTH_TEST);
-
-		//// print time
-		//printf("time: %f\n", current_time);
 
 		//END OF DRAW SAWP BUFFERS
 		glfwSwapBuffers(window);

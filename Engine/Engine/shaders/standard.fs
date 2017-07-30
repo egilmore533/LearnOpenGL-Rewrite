@@ -56,9 +56,9 @@ uniform Directional_Light directional_light;
 uniform Point_Light point_lights[MAX_POINT_LIGHTS];
 uniform Spot_Light spot_light;
 
-vec3 calulate_directional_light(Directional_Light light, vec3 normal, vec3 view_direction);
-vec3 calulate_point_light(Point_Light light, vec3 normal, vec3 fragment_position, vec3 view_direction);
-vec3 calculate_spot_light(Spot_Light light, vec3 normal, vec3 fragment_position, vec3 view_direction);
+vec4 calulate_directional_light(Directional_Light light, vec3 normal, vec3 view_direction);
+vec4 calulate_point_light(Point_Light light, vec3 normal, vec3 fragment_position, vec3 view_direction);
+vec4 calculate_spot_light(Spot_Light light, vec3 normal, vec3 fragment_position, vec3 view_direction);
 
 void main()
 {
@@ -67,7 +67,7 @@ void main()
     vec3 view_direction = normalize(-fragment_position);
 
 	// phase 1: Directional lighting
-    vec3 result = calulate_directional_light(directional_light, norm, view_direction);
+    vec4 result = calulate_directional_light(directional_light, norm, view_direction);
 
 	// phase 2: Point lights
     for(int i = 0; i < MAX_POINT_LIGHTS; i++)
@@ -76,11 +76,11 @@ void main()
 	// phase 3: spot light
     result += calculate_spot_light(spot_light, norm, fragment_position, view_direction);
 	
-	frag_color = vec4(result, 1.0);
+	frag_color = result;
 }
 
 
-vec3 calulate_directional_light(Directional_Light light, vec3 normal, vec3 view_direction)
+vec4 calulate_directional_light(Directional_Light light, vec3 normal, vec3 view_direction)
 {
 	vec3 light_direction = normalize(-light.direction);
     // diffuse shading
@@ -90,14 +90,14 @@ vec3 calulate_directional_light(Directional_Light light, vec3 normal, vec3 view_
     float specular_impact = pow(max(dot(view_direction, reflect_direction), 0.0), material.shininess);
 
     // combine results
-    vec3 ambient_component  = light.ambient  * vec3(texture(material.diffuse_map1, texture_coordinates));
-    vec3 diffuse_component  = light.diffuse  * diffuse_impact * vec3(texture(material.diffuse_map1, texture_coordinates));
-    vec3 specular_component = light.specular * specular_impact * vec3(texture(material.specular_map1, texture_coordinates));
+    vec4 ambient_component  = vec4(light.ambient, 1.0)  * texture(material.diffuse_map1, texture_coordinates);
+    vec4 diffuse_component  = vec4(light.diffuse, 1.0)  * diffuse_impact * texture(material.diffuse_map1, texture_coordinates);
+    vec4 specular_component = vec4(light.specular, 1.0) * specular_impact * texture(material.specular_map1, texture_coordinates);
 
     return (ambient_component + diffuse_component + specular_component);
 }
 
-vec3 calulate_point_light(Point_Light light, vec3 normal, vec3 fragment_position, vec3 view_direction)
+vec4 calulate_point_light(Point_Light light, vec3 normal, vec3 fragment_position, vec3 view_direction)
 {
 	vec3 light_direction = normalize(light.position - fragment_position);
     // diffuse shading
@@ -110,9 +110,9 @@ vec3 calulate_point_light(Point_Light light, vec3 normal, vec3 fragment_position
 	float attenuation = 1.0 / (light.attenuation_constant + light.attenuation_linear * distance + light.attenuation_quadratic * (distance * distance)); 
 
     // combine results
-    vec3 ambient_component  = light.ambient  * vec3(texture(material.diffuse_map1, texture_coordinates));
-    vec3 diffuse_component  = light.diffuse  * diffuse_impact * vec3(texture(material.diffuse_map1, texture_coordinates));
-    vec3 specular_component = light.specular * specular_impact * vec3(texture(material.specular_map1, texture_coordinates));
+    vec4 ambient_component  = vec4(light.ambient, 1.0)  * texture(material.diffuse_map1, texture_coordinates);
+    vec4 diffuse_component  = vec4(light.diffuse, 1.0)  * diffuse_impact * texture(material.diffuse_map1, texture_coordinates);
+    vec4 specular_component = vec4(light.specular, 1.0) * specular_impact * texture(material.specular_map1, texture_coordinates);
 
 	ambient_component *= attenuation;
 	diffuse_component *= attenuation;
@@ -121,7 +121,7 @@ vec3 calulate_point_light(Point_Light light, vec3 normal, vec3 fragment_position
     return (ambient_component + diffuse_component + specular_component);
 }
 
-vec3 calculate_spot_light(Spot_Light light, vec3 normal, vec3 fragment_position, vec3 view_direction)
+vec4 calculate_spot_light(Spot_Light light, vec3 normal, vec3 fragment_position, vec3 view_direction)
 {
     vec3 light_direction = normalize(light.position - fragment_position);
     // diffuse shading
@@ -138,9 +138,9 @@ vec3 calculate_spot_light(Spot_Light light, vec3 normal, vec3 fragment_position,
 	float intensity	= clamp((theta - light.outer_cut_off) / epsilon, 0.0, 1.0);
 
 	// combine results
-    vec3 ambient_component  = light.ambient  * vec3(texture(material.diffuse_map1, texture_coordinates));
-    vec3 diffuse_component  = light.diffuse  * diffuse_impact * vec3(texture(material.diffuse_map1, texture_coordinates));
-    vec3 specular_component = light.specular * specular_impact * vec3(texture(material.specular_map1, texture_coordinates));
+    vec4 ambient_component  = vec4(light.ambient, 1.0)  * texture(material.diffuse_map1, texture_coordinates);
+    vec4 diffuse_component  = vec4(light.diffuse, 1.0)  * diffuse_impact * texture(material.diffuse_map1, texture_coordinates);
+    vec4 specular_component = vec4(light.specular, 1.0) * specular_impact * texture(material.specular_map1, texture_coordinates);
 
 	ambient_component	*= attenuation * intensity;
 	diffuse_component	*= attenuation * intensity;
