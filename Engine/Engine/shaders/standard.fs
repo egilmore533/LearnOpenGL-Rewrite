@@ -75,7 +75,7 @@ void main()
 
 	// phase 3: spot light
     result += calculate_spot_light(spot_light, norm, fragment_position, view_direction);
-	
+
 	frag_color = result;
 }
 

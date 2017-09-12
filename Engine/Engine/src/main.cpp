@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <math.h>
+#include <map>
 
 #include <glad/glad.h> 
 #include <GLFW/glfw3.h>
@@ -74,11 +75,11 @@ int main()
 
 	Shader lamp_shader("shaders/lamp.vs", "shaders/lamp.fs");
 
-	Shader outline_shader("shaders/standard.vs", "shaders/outline.fs");
+	Shader blending_shader("shaders/standard.vs", "shaders/blending.fs");
 
 	// set up vertex data (and buffer(s)) and configure vertex attributes
 	// ------------------------------------------------------------------
-	float vertices[] = {
+	float cube_vertices[] = {
 		// positions          // normals           // texture coords
 		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
 		0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
@@ -123,6 +124,16 @@ int main()
 		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
 	};
 
+	float plane_vertices[] = {
+		// positions          // normals           // texture coords
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
+		0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
+		0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
+		0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f
+	};
+
 	// world space positions of our cubes
 	glm::vec3 cube_positions[] = {
 		glm::vec3(0.0f,  0.0f,  0.0f),
@@ -144,12 +155,20 @@ int main()
 		glm::vec3(0.0f,  0.0f, -3.0f)
 	};
 
+	glm::vec3 windows[] = {
+		glm::vec3(-1.5f, 0.0f, -0.48f),
+		glm::vec3(1.5f, 0.0f, 0.51f),
+		glm::vec3(0.0f, 0.0f, 0.7f),
+		glm::vec3(-0.3f, 0.0f, -2.3f),
+		glm::vec3(0.5f, 0.0f, -0.6f)
+	};
+
 	unsigned int vbo, cube_vao;
 	glGenVertexArrays(1, &cube_vao);
 	glGenBuffers(1, &vbo);
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(cube_vertices), cube_vertices, GL_STATIC_DRAW);
 
 	glBindVertexArray(cube_vao);
 
@@ -173,10 +192,31 @@ int main()
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
+
+	unsigned int plane_vao, plane_vbo;
+
+	glGenVertexArrays(1, &plane_vao);
+	glGenBuffers(1, &plane_vbo);
+	
+	glBindVertexArray(plane_vao);
+	glBindBuffer(GL_ARRAY_BUFFER, plane_vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(plane_vertices), &plane_vertices, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	//normal attribute
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+	//texel attribute
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glEnableVertexAttribArray(2);
 	
 	// load models
 	// -----------
 	Model nanosuit("resources/objects/nanosuit/nanosuit.obj");
+
+	unsigned int transparent_grass_texture = load_texture("resources/textures/grass.png");
+	unsigned int transparent_window_texture = load_texture("resources/textures/blending_transparent_window.png");
 
 	// configure global opengl state
 	// -----------------------------
@@ -193,6 +233,16 @@ int main()
 		process_input(window);
 		//update everything
 
+		// sort the transparent windows before rendering
+		// This doesn't handle any transformations of the semi-transparent objects
+		// If you want to do this try looking into order independent transparency
+		std::map<float, glm::vec3> sorted;
+		for (unsigned int i = 0; i < 5; i++)
+		{
+			float distance = glm::length(camera.m_position - windows[i]);
+			sorted[distance] = windows[i];
+		}
+
 		//draw/render everything
 		glClearColor(0.8f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -205,9 +255,9 @@ int main()
 		// note: currently we set the projection matrix each frame, but since the projection matrix rarely changes it's often best practice to set it outside the main loop only once.
 
 		// set uniforms
-		outline_shader.use();
-		outline_shader.set_mat4("view", view);
-		outline_shader.set_mat4("projection", projection);
+		blending_shader.use();
+		blending_shader.set_mat4("view", view);
+		blending_shader.set_mat4("projection", projection);
 
 		lamp_shader.use();
 		lamp_shader.set_mat4("projection", projection);
@@ -302,6 +352,28 @@ int main()
 		lighting_shader.set_mat3("normal_matrix", normal_matrix);
 
 		nanosuit.draw(lighting_shader);
+		
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		blending_shader.use();
+		glBindVertexArray(plane_vao);
+		int j = 0;
+
+		for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
+		{
+			model = glm::mat4();
+			model = glm::translate(model, it->second);
+			blending_shader.set_mat4("model", model);
+
+			normal_matrix = glm::mat3(glm::transpose(glm::inverse(view * model)));
+			blending_shader.set_mat3("normal_matrix", normal_matrix);
+
+			glBindTexture(GL_TEXTURE_2D, transparent_window_texture);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+		}
+
+		glDisable(GL_BLEND);
 
 		//END OF DRAW SAWP BUFFERS
 		glfwSwapBuffers(window);
@@ -313,6 +385,8 @@ int main()
 	glDeleteVertexArrays(1, &light_vao);
 	glDeleteVertexArrays(1, &cube_vao);
 	glDeleteBuffers(1, &vbo);
+	glDeleteVertexArrays(1, &plane_vao);
+	glDeleteBuffers(1, &plane_vbo);
 
 	glfwTerminate();
 	return 0;
@@ -386,8 +460,8 @@ unsigned int load_texture(char const * path)
 		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 

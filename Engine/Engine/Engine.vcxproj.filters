@@ -25,6 +25,9 @@
     <Filter Include="Shader Files\OutlineShader">
       <UniqueIdentifier>{ee52c43c-424d-4599-8320-6b21f19317d1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shader Files\Blending">
+      <UniqueIdentifier>{87b463e2-4c73-48a8-bf7d-cec5291a3fb5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -70,9 +73,6 @@
     <None Include="shaders\standard.fs">
       <Filter>Shader Files\Standard</Filter>
     </None>
-    <None Include="shaders\standard.vs">
-      <Filter>Shader Files\Standard</Filter>
-    </None>
     <None Include="shaders\lamp.fs">
       <Filter>Shader Files\Lamp</Filter>
     </None>
@@ -81,6 +81,12 @@
     </None>
     <None Include="shaders\outline.fs">
       <Filter>Shader Files\OutlineShader</Filter>
+    </None>
+    <None Include="shaders\blending.fs">
+      <Filter>Shader Files\Blending</Filter>
+    </None>
+    <None Include="shaders\standard.vs">
+      <Filter>Shader Files\Standard</Filter>
     </None>
   </ItemGroup>
 </Project>
