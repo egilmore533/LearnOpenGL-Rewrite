@@ -35,9 +35,6 @@ float last_x = SCREEN_WIDTH / 2.0f;
 float last_y = SCREEN_HEIGHT / 2.0f;
 bool first_mouse = true;
 
-//////////////LIGHTING CODE//////////////
-glm::vec3 light_position(1.2f, 1.0f, 2.0f);
-
 
 int main()
 {
@@ -55,7 +52,7 @@ int main()
 	}
 	glfwMakeContextCurrent(window);
 
-	//window callback set up
+	// window callback set up
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetScrollCallback(window, scroll_callback);
@@ -72,19 +69,18 @@ int main()
 	stbi_set_flip_vertically_on_load(true);
 
 	Shader lighting_shader("shaders/standard.vs", "shaders/standard.fs");
-
 	Shader lamp_shader("shaders/lamp.vs", "shaders/lamp.fs");
-
 	Shader blending_shader("shaders/standard.vs", "shaders/blending.fs");
+	Shader simple_shader("shaders/simple.vs", "shaders/simple.fs");
 
 	// set up vertex data (and buffer(s)) and configure vertex attributes
 	// ------------------------------------------------------------------
 	float cube_vertices_ccw_winding_order[] = {
 		// Back face
 		-0.5f, -0.5f, -0.5f, 0.0f,  0.0f, -1.0f,  0.0f, 0.0f, // Bottom-left
-		0.5f,  0.5f, -0.5f, 0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
-		0.5f, -0.5f, -0.5f, 0.0f,  0.0f, -1.0f, 1.0f, 0.0f, // bottom-right         
-		0.5f,  0.5f, -0.5f, 0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
+		 0.5f,  0.5f, -0.5f, 0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
+		 0.5f, -0.5f, -0.5f, 0.0f,  0.0f, -1.0f, 1.0f, 0.0f, // bottom-right         
+		 0.5f,  0.5f, -0.5f, 0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
 		-0.5f, -0.5f, -0.5f, 0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
 		-0.5f,  0.5f, -0.5f, 0.0f,  0.0f, -1.0f, 0.0f, 1.0f, // top-left
 		// Front face
@@ -102,12 +98,12 @@ int main()
 		-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-right
 		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
 		// Right face
-		0.5f,  0.5f,  0.5f, 1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
-		0.5f, -0.5f, -0.5f, 1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
-		0.5f,  0.5f, -0.5f, 1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-right         
-		0.5f, -0.5f, -0.5f, 1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
-		0.5f,  0.5f,  0.5f, 1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
-		0.5f, -0.5f,  0.5f, 1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-left
+		 0.5f,  0.5f,  0.5f, 1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
+		 0.5f, -0.5f, -0.5f, 1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
+		 0.5f,  0.5f, -0.5f, 1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-right         
+		 0.5f, -0.5f, -0.5f, 1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
+		 0.5f,  0.5f,  0.5f, 1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
+		 0.5f, -0.5f,  0.5f, 1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-left
 		// Bottom face
 		-0.5f, -0.5f, -0.5f, 0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
 		 0.5f, -0.5f, -0.5f, 0.0f, -1.0f,  0.0f, 1.0f, 1.0f, // top-left
@@ -132,6 +128,18 @@ int main()
 		0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
 		-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f,
 		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f
+	};
+
+	// vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
+	float simple_quad_vertices[] = {
+		// positions   // texCoords
+		-1.0f,  1.0f,  0.0f, 1.0f,
+		-1.0f, -1.0f,  0.0f, 0.0f,
+		1.0f, -1.0f,  1.0f, 0.0f,
+
+		-1.0f,  1.0f,  0.0f, 1.0f,
+		1.0f, -1.0f,  1.0f, 0.0f,
+		1.0f,  1.0f,  1.0f, 1.0f
 	};
 
 	// world space positions of our cubes
@@ -175,10 +183,10 @@ int main()
 	// position attribute
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
-	//normal attribute
+	// normal attribute
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
-	//texel attribute
+	// texel attribute
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
 	glEnableVertexAttribArray(2);
 
@@ -204,12 +212,28 @@ int main()
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
-	//normal attribute
+	// normal attribute
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
-	//texel attribute
+	// texel attribute
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
 	glEnableVertexAttribArray(2);
+
+	// screen quad vao
+	unsigned int quad_vao, quad_vbo;
+
+	glGenVertexArrays(1, &quad_vao);
+	glGenBuffers(1, &quad_vbo);
+
+	glBindVertexArray(quad_vao);
+	glBindBuffer(GL_ARRAY_BUFFER, quad_vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(simple_quad_vertices), &simple_quad_vertices, GL_STATIC_DRAW);
+
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
 	
 	// load models
 	// -----------
@@ -218,20 +242,60 @@ int main()
 	unsigned int transparent_grass_texture = load_texture("resources/textures/grass.png");
 	unsigned int transparent_window_texture = load_texture("resources/textures/blending_transparent_window.png");
 
-	// configure global opengl state
-	// -----------------------------
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LESS);
+	// --------------------------------------------------------------------------
+	//	framebuffer configuration -----------------------------------------------
+	// --------------------------------------------------------------------------
+	unsigned int framebuffer_object;
+	glGenFramebuffers(1, &framebuffer_object);
+	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_object);
+
+		// create color buffer texture
+		unsigned int texture_color_buffer;
+		glGenTextures(1, &texture_color_buffer);
+		glBindTexture(GL_TEXTURE_2D, texture_color_buffer);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, SCREEN_WIDTH, SCREEN_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+		// attach the color buffer texture to the currently bound framebuffer object
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture_color_buffer, 0);
+
+		// create a renderbuffer object for depth and stencil attachment (we won't be sampling these)
+		unsigned int renderbuffer_object;
+		glGenRenderbuffers(1, &renderbuffer_object);
+		glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer_object);
+			glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 800, 600);
+		glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+		// attach the renderbuffer to the currently bound framebuffer object
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderbuffer_object);
+		
+		// now check that the framebuffer object is complete and we can use it
+		// in order to be complete it needs the following
+		//	1. We have to attach at least one buffer (color, depth or stencil buffer).
+		//	2. There should be at least one color attachment.
+		//	3. All attachments should be complete as well(reserved memory).
+		//	4. Each buffer should have the same number of samples.
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+			std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+
+		// unbind the framebuffer to make sure we're not accidentally rendering to the wrong framebuffer
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	// --------------------------------------------------------------------------
+	//	end framebuffer configuration -------------------------------------------
+	// --------------------------------------------------------------------------
 
 	while (!glfwWindowShouldClose(window))
 	{
-		//get time for this frame
+		// get time for this frame
 		current_time = glfwGetTime();
 		delta_time = current_time - last_frame;
 		last_frame = current_time;
 
+		
+		// update everything
 		process_input(window);
-		//update everything
 
 		// sort the transparent windows before rendering
 		// This doesn't handle any transformations of the semi-transparent objects
@@ -243,8 +307,14 @@ int main()
 			sorted[distance] = windows[i];
 		}
 
-		//draw/render everything
-		glClearColor(0.8f, 0.3f, 0.3f, 1.0f);
+		// bind to framebuffer and draw scene normally
+		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_object);
+
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LESS);
+
+		// draw/render everything
+		glClearColor(0.3f, 0.3f, 0.8f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		glEnable(GL_CULL_FACE);
 
@@ -378,7 +448,18 @@ int main()
 
 		glDisable(GL_BLEND);
 
-		//END OF DRAW SAWP BUFFERS
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glDisable(GL_DEPTH_TEST);
+
+		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		simple_shader.use();
+		glBindVertexArray(quad_vao);
+		glBindTexture(GL_TEXTURE_2D, texture_color_buffer);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+
+		// END OF DRAW SAWP BUFFERS
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
@@ -390,6 +471,10 @@ int main()
 	glDeleteBuffers(1, &vbo);
 	glDeleteVertexArrays(1, &plane_vao);
 	glDeleteBuffers(1, &plane_vbo);
+	glDeleteVertexArrays(1, &quad_vao);
+	glDeleteBuffers(1, &quad_vbo);
+
+	glDeleteFramebuffers(1, &framebuffer_object);
 
 	glfwTerminate();
 	return 0;

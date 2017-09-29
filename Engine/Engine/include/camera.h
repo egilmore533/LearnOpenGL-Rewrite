@@ -41,7 +41,7 @@ class Camera
 {
 public:
 
-	//Attributes
+	// Attributes
 	glm::vec3 m_position;	/**< position of the camera in world space */
 	glm::vec3 m_front;		/**< direction vector for front of camera */
 	glm::vec3 m_up;			/**< direction vector for top of camera */

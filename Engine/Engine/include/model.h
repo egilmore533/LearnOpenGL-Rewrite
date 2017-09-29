@@ -43,7 +43,7 @@ public:
 	void draw(Shader shader);
 
 private:
-	//Model Data
+	// Model Data
 	std::vector<texture> m_textures_loaded;		/**< stores all the textures loaded so far, optimization to make sure textures aren't loaded more than once. */
 	std::vector<Mesh> m_meshes;					/**< list of every mesh in this Model */
 	std::string m_directory;					/**< the directory that this model is inside of, this system will presume that all the textures are in the same directory */

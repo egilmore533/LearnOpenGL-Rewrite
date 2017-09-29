@@ -28,6 +28,9 @@
     <Filter Include="Shader Files\Blending">
       <UniqueIdentifier>{87b463e2-4c73-48a8-bf7d-cec5291a3fb5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shader Files\Simple">
+      <UniqueIdentifier>{e2948376-7f87-4043-9eb2-cad788b7e7a1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -87,6 +90,12 @@
     </None>
     <None Include="shaders\standard.vs">
       <Filter>Shader Files\Standard</Filter>
+    </None>
+    <None Include="shaders\simple.vs">
+      <Filter>Shader Files\Simple</Filter>
+    </None>
+    <None Include="shaders\simple.fs">
+      <Filter>Shader Files\Simple</Filter>
     </None>
   </ItemGroup>
 </Project>

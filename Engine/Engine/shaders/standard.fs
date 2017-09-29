@@ -132,7 +132,7 @@ vec4 calculate_spot_light(Spot_Light light, vec3 normal, vec3 fragment_position,
 	// attenuation calculation
 	float distance    = length(light.position - fragment_position);
 	float attenuation = 1.0 / (light.attenuation_constant + light.attenuation_linear * distance + light.attenuation_quadratic * (distance * distance)); 
-	//spotlight intensity and soft edge calculation
+	// spotlight intensity and soft edge calculation
 	float theta		= dot(light_direction, normalize(-light.direction));
 	float epsilon	= light.cut_off - light.outer_cut_off;
 	float intensity	= clamp((theta - light.outer_cut_off) / epsilon, 0.0, 1.0);

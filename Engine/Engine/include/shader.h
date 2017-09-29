@@ -42,7 +42,7 @@ public:
 	*/
     void use();
 
-	//uniform setters
+	// uniform setters
 
     /**
 	* @brief utility function to set a uniform bool in the shader

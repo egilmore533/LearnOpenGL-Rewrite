@@ -56,12 +56,12 @@ void Mesh::draw(Shader shader)
 
 void Mesh::setup_mesh()
 {
-	//create the buffers
+	// create the buffers
 	glGenVertexArrays(1, &vao);
 	glGenBuffers(1, &vbo);
 	glGenBuffers(1, &ebo);
 
-	//we are now using vao
+	// we are now using vao
 	glBindVertexArray(vao);
 
 	/////////// load data into vertex buffers
@@ -96,7 +96,7 @@ void Mesh::setup_mesh()
 
 	/////////// end of vertex attribute pointers
 
-	//we are no longer using vao
+	// we are no longer using vao
 	glBindVertexArray(0);
 }
 

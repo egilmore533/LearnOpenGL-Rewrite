@@ -69,7 +69,7 @@ public:
 	*/
 	void draw(Shader shader);
 
-	//Mesh Data
+	// Mesh Data
 	std::vector<vertex> m_vertices; 			/**< a vector of all the vertices in this Mesh, each containing position, normal, and texture_coordinates */
 	std::vector<unsigned int> m_indices;		/**< a vector of all the vertex indices to be drawn (using glDrawElements) or this Mesh */
 	std::vector<texture> m_textures;			/**< all the textures for this Mesh */
@@ -81,7 +81,7 @@ private:
 	*/
 	void setup_mesh();
 
-	//Mesh buffers
+	// Mesh buffers
 	unsigned int vao;		/**< the vertex array object with the attribute data */
 	unsigned int vbo;		/**< the vertex buffer object with all the vertex data */
 	unsigned int ebo;		/**< the element buffer object, which stores which vertices to draw */
