@@ -9,7 +9,7 @@ const float offset = 1.0 / 300; // this is how far each sample from the texture 
 
 void main()
 {
-	// these are the offsets we will use to sample the texture from different locations areound the current texture coordinate
+	// these are the offsets we will use to sample the texture from different locations around the current texture coordinate
 	// these correspond to our kernel's values
 	vec2 offsets[9] = vec2[](
 		vec2(-offset,  offset), // top-left
@@ -25,9 +25,9 @@ void main()
 
 	// this is an array of values centered on the current pixel to multiply the surrounding pixel values by
 	float kernel[9] = float[](
-		-1, -1, -1,
-		-1, 9, -1,
-		-1, -1, -1
+		 1.0 / 16,  2.0 / 16,  1.0 / 16,
+		 2.0 / 16,  4.0 / 16,  2.0 / 16,
+		 1.0 / 16,  2.0 / 16,  1.0 / 16
 	);
 
 	// this array is populated by the color values from the texture at the corresponding positions from the offsets array
