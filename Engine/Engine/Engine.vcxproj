@@ -171,6 +171,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\blending.fs" />
+    <None Include="shaders\grayscale.fs" />
     <None Include="shaders\inverse.fs" />
     <None Include="shaders\lamp.fs" />
     <None Include="shaders\lamp.vs" />
