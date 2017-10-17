@@ -106,5 +106,8 @@
     <None Include="shaders\grayscale.fs">
       <Filter>Shader Files\PostProcessing</Filter>
     </None>
+    <None Include="shaders\kernel.fs">
+      <Filter>Shader Files\PostProcessing</Filter>
+    </None>
   </ItemGroup>
 </Project>

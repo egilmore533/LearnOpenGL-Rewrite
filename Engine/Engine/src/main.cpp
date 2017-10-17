@@ -72,7 +72,7 @@ int main()
 	Shader lamp_shader("shaders/lamp.vs", "shaders/lamp.fs");
 	Shader blending_shader("shaders/standard.vs", "shaders/blending.fs");
 	Shader simple_shader("shaders/simple.vs", "shaders/simple.fs");
-	Shader post_processing_shader("shaders/simple.vs", "shaders/grayscale.fs");
+	Shader post_processing_shader("shaders/simple.vs", "shaders/kernel.fs");
 
 	// set up vertex data (and buffer(s)) and configure vertex attributes
 	// ------------------------------------------------------------------
