@@ -31,6 +31,9 @@
     <Filter Include="Shader Files\Simple">
       <UniqueIdentifier>{e2948376-7f87-4043-9eb2-cad788b7e7a1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shader Files\PostProcessing">
+      <UniqueIdentifier>{46719221-176f-4c8d-a556-fc0870526436}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -96,6 +99,9 @@
     </None>
     <None Include="shaders\simple.fs">
       <Filter>Shader Files\Simple</Filter>
+    </None>
+    <None Include="shaders\inverse.fs">
+      <Filter>Shader Files\PostProcessing</Filter>
     </None>
   </ItemGroup>
 </Project>
