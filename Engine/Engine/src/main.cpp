@@ -35,6 +35,8 @@ float last_x = SCREEN_WIDTH / 2.0f;
 float last_y = SCREEN_HEIGHT / 2.0f;
 bool first_mouse = true;
 
+int effect = 0;
+
 
 int main()
 {
@@ -455,7 +457,16 @@ int main()
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		post_processing_shader.use();
+		switch (effect)
+		{
+		case 0:
+			simple_shader.use();
+			break;
+		case 1:
+			post_processing_shader.use();
+			break;
+		}
+		
 		glBindVertexArray(quad_vao);
 		glBindTexture(GL_TEXTURE_2D, texture_color_buffer);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -494,6 +505,10 @@ void process_input(GLFWwindow *window)
 		camera.process_keyboard(LEFT, delta_time);
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 		camera.process_keyboard(RIGHT, delta_time);
+	if (glfwGetKey(window, GLFW_KEY_1))
+		effect = 0;
+	if (glfwGetKey(window, GLFW_KEY_2))
+		effect = 1;
 }
 
 void mouse_callback(GLFWwindow* window, double x_pos, double y_pos)
