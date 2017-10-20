@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <map>
+#include <string>
 
 #include <glad/glad.h> 
 #include <GLFW/glfw3.h>
@@ -19,6 +20,7 @@ void mouse_callback(GLFWwindow* window, double x_pos, double y_pos);
 void scroll_callback(GLFWwindow* window, double x_offset, double y_offset);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 unsigned int load_texture(const char *path);
+unsigned int load_cubemap(std::vector<std::string> faces);
 
 const unsigned int SCREEN_WIDTH = 800;
 const unsigned int SCREEN_HEIGHT = 600;
@@ -75,6 +77,7 @@ int main()
 	Shader blending_shader("shaders/standard.vs", "shaders/blending.fs");
 	Shader simple_shader("shaders/simple.vs", "shaders/simple.fs");
 	Shader post_processing_shader("shaders/simple.vs", "shaders/kernel.fs");
+	Shader skybox_shader("shaders/skybox.vs", "shaders/skybox.fs");
 
 	// set up vertex data (and buffer(s)) and configure vertex attributes
 	// ------------------------------------------------------------------
@@ -174,6 +177,61 @@ int main()
 		glm::vec3(0.5f, 0.0f, -0.6f)
 	};
 
+	float skybox_vertices[] = {
+		// positions          
+		-1.0f,  1.0f, -1.0f,
+		-1.0f, -1.0f, -1.0f,
+		1.0f, -1.0f, -1.0f,
+		1.0f, -1.0f, -1.0f,
+		1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+
+		-1.0f, -1.0f,  1.0f,
+		-1.0f, -1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f,  1.0f,
+		-1.0f, -1.0f,  1.0f,
+
+		1.0f, -1.0f, -1.0f,
+		1.0f, -1.0f,  1.0f,
+		1.0f,  1.0f,  1.0f,
+		1.0f,  1.0f,  1.0f,
+		1.0f,  1.0f, -1.0f,
+		1.0f, -1.0f, -1.0f,
+
+		-1.0f, -1.0f,  1.0f,
+		-1.0f,  1.0f,  1.0f,
+		1.0f,  1.0f,  1.0f,
+		1.0f,  1.0f,  1.0f,
+		1.0f, -1.0f,  1.0f,
+		-1.0f, -1.0f,  1.0f,
+
+		-1.0f,  1.0f, -1.0f,
+		1.0f,  1.0f, -1.0f,
+		1.0f,  1.0f,  1.0f,
+		1.0f,  1.0f,  1.0f,
+		-1.0f,  1.0f,  1.0f,
+		-1.0f,  1.0f, -1.0f,
+
+		-1.0f, -1.0f, -1.0f,
+		-1.0f, -1.0f,  1.0f,
+		1.0f, -1.0f, -1.0f,
+		1.0f, -1.0f, -1.0f,
+		-1.0f, -1.0f,  1.0f,
+		1.0f, -1.0f,  1.0f
+	};
+
+	std::vector<std::string> skybox_faces_filepaths = 
+	{
+		"resources/textures/skybox/right.jpg",
+		"resources/textures/skybox/left.jpg",
+		"resources/textures/skybox/top.jpg",
+		"resources/textures/skybox/bottom.jpg",
+		"resources/textures/skybox/back.jpg",
+		"resources/textures/skybox/front.jpg"
+	};
+
 	unsigned int vbo, cube_vao;
 	glGenVertexArrays(1, &cube_vao);
 	glGenBuffers(1, &vbo);
@@ -232,18 +290,36 @@ int main()
 	glBindBuffer(GL_ARRAY_BUFFER, quad_vbo);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(simple_quad_vertices), &simple_quad_vertices, GL_STATIC_DRAW);
 
-	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
 
-	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
-	
+	glEnableVertexAttribArray(1);
+
+	// skybox vbo, vao, and vertices
+	unsigned int skybox_vao, skybox_vbo;
+
+	glGenVertexArrays(1, &skybox_vao);
+	glGenBuffers(1, &skybox_vbo);
+
+	glBindVertexArray(skybox_vao);
+	glBindBuffer(GL_ARRAY_BUFFER, skybox_vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(skybox_vertices), &skybox_vertices, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
 	// load models
 	// -----------
 	Model nanosuit("resources/objects/nanosuit/nanosuit.obj");
 
 	unsigned int transparent_grass_texture = load_texture("resources/textures/grass.png");
 	unsigned int transparent_window_texture = load_texture("resources/textures/blending_transparent_window.png");
+	
+	// not sure why these are don't need to be flipped but loading them unflipped fixes this quick issue
+	stbi_set_flip_vertically_on_load(false);
+	unsigned int skybox_texture = load_cubemap(skybox_faces_filepaths);
+	stbi_set_flip_vertically_on_load(true);
 
 	// --------------------------------------------------------------------------
 	//	framebuffer configuration -----------------------------------------------
@@ -327,6 +403,17 @@ int main()
 		glm::mat4 projection;
 		projection = glm::perspective(glm::radians(camera.m_zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
 		// note: currently we set the projection matrix each frame, but since the projection matrix rarely changes it's often best practice to set it outside the main loop only once.
+
+		glDepthMask(GL_FALSE);
+		skybox_shader.use();
+		glm::mat4 view_no_translation = glm::mat4(glm::mat3(camera.get_view_matrix()));
+		skybox_shader.set_mat4("view", view_no_translation);
+		skybox_shader.set_mat4("projection", projection);
+		glBindVertexArray(skybox_vao);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_texture);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		glDepthMask(GL_TRUE);
+
 
 		// set uniforms
 		blending_shader.use();
@@ -576,6 +663,37 @@ unsigned int load_texture(char const * path)
 		std::cout << "Texture failed to load at path: " << path << std::endl;
 		stbi_image_free(data);
 	}
+
+	return texture_id;
+}
+
+unsigned int load_cubemap(std::vector<std::string> faces)
+{
+	unsigned int texture_id;
+	glGenTextures(1, &texture_id);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, texture_id);
+
+	int width, height, nr_channels;
+	for (int i = 0; i < faces.size(); i++)
+	{
+		unsigned char *data = stbi_load(faces[i].c_str(), &width, &height, &nr_channels, 0);
+		if (data)
+		{
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+			stbi_image_free(data);
+		}
+		else
+		{
+			printf("Cubemap texture failed to load at filepath: %s\n", faces[i]);
+			stbi_image_free(data);
+		}
+	}
+
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
 	return texture_id;
 }
