@@ -78,6 +78,7 @@ int main()
 	Shader simple_shader("shaders/simple.vs", "shaders/simple.fs");
 	Shader post_processing_shader("shaders/simple.vs", "shaders/kernel.fs");
 	Shader skybox_shader("shaders/skybox.vs", "shaders/skybox.fs");
+	Shader reflective_shader("shaders/reflection.vs", "shaders/reflection.fs");
 
 	// set up vertex data (and buffer(s)) and configure vertex attributes
 	// ------------------------------------------------------------------
@@ -413,9 +414,6 @@ int main()
 		lamp_shader.set_mat4("projection", projection);
 		lamp_shader.set_mat4("view", view);
 
-		// render boxes
-		glBindVertexArray(cube_vao);
-
 		glBindVertexArray(light_vao);
 		for (int i = 0; i < 4; i++)
 		{
@@ -502,6 +500,18 @@ int main()
 		lighting_shader.set_mat3("normal_matrix", normal_matrix);
 
 		nanosuit.draw(lighting_shader);
+
+		// render boxes
+		reflective_shader.use();
+		reflective_shader.set_mat4("model", model);
+		reflective_shader.set_mat4("view", view);
+		reflective_shader.set_mat4("projection", projection);
+		reflective_shader.set_vec3("camera_pos", camera.m_position);
+		glBindVertexArray(cube_vao);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_texture);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		glBindVertexArray(0);
 		
 		glDepthFunc(GL_LEQUAL);
 		//glDepthMask(GL_FALSE);

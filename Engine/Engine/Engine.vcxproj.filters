@@ -37,6 +37,9 @@
     <Filter Include="Shader Files\Sybox">
       <UniqueIdentifier>{d72f6b5b-9d46-4f5a-ad2e-049ea60e1bec}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shader Files\Reflective">
+      <UniqueIdentifier>{6c8616c9-daee-4323-ba98-b436b22b3918}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -117,6 +120,12 @@
     </None>
     <None Include="shaders\skybox.fs">
       <Filter>Shader Files\Sybox</Filter>
+    </None>
+    <None Include="shaders\reflection.vs">
+      <Filter>Shader Files\Reflective</Filter>
+    </None>
+    <None Include="shaders\reflection.fs">
+      <Filter>Shader Files\Reflective</Filter>
     </None>
   </ItemGroup>
 </Project>
