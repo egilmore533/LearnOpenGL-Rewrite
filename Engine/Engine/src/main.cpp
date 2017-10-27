@@ -404,17 +404,6 @@ int main()
 		projection = glm::perspective(glm::radians(camera.m_zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
 		// note: currently we set the projection matrix each frame, but since the projection matrix rarely changes it's often best practice to set it outside the main loop only once.
 
-		glDepthMask(GL_FALSE);
-		skybox_shader.use();
-		glm::mat4 view_no_translation = glm::mat4(glm::mat3(camera.get_view_matrix()));
-		skybox_shader.set_mat4("view", view_no_translation);
-		skybox_shader.set_mat4("projection", projection);
-		glBindVertexArray(skybox_vao);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_texture);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-		glDepthMask(GL_TRUE);
-
-
 		// set uniforms
 		blending_shader.use();
 		blending_shader.set_mat4("view", view);
@@ -514,6 +503,18 @@ int main()
 
 		nanosuit.draw(lighting_shader);
 		
+		glDepthFunc(GL_LEQUAL);
+		//glDepthMask(GL_FALSE);
+		skybox_shader.use();
+		glm::mat4 view_no_translation = glm::mat4(glm::mat3(camera.get_view_matrix()));
+		skybox_shader.set_mat4("view", view_no_translation);
+		skybox_shader.set_mat4("projection", projection);
+		glBindVertexArray(skybox_vao);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_texture);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		//glDepthMask(GL_TRUE);
+		glDepthFunc(GL_LESS);
+
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
