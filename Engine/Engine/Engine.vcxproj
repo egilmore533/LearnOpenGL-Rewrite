@@ -179,6 +179,7 @@
     <None Include="shaders\outline.fs" />
     <None Include="shaders\reflection.fs" />
     <None Include="shaders\reflection.vs" />
+    <None Include="shaders\refraction.fs" />
     <None Include="shaders\simple.fs" />
     <None Include="shaders\simple.vs" />
     <None Include="shaders\skybox.fs" />

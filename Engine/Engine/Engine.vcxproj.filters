@@ -40,6 +40,9 @@
     <Filter Include="Shader Files\Reflective">
       <UniqueIdentifier>{6c8616c9-daee-4323-ba98-b436b22b3918}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shader Files\Refraction">
+      <UniqueIdentifier>{57e58c63-6f38-4813-8ee2-db595d668773}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -126,6 +129,9 @@
     </None>
     <None Include="shaders\reflection.fs">
       <Filter>Shader Files\Reflective</Filter>
+    </None>
+    <None Include="shaders\refraction.fs">
+      <Filter>Shader Files\Refraction</Filter>
     </None>
   </ItemGroup>
 </Project>
