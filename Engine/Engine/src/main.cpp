@@ -499,19 +499,22 @@ int main()
 		normal_matrix = glm::mat3(glm::transpose(glm::inverse(view * model)));
 		lighting_shader.set_mat3("normal_matrix", normal_matrix);
 
-		nanosuit.draw(lighting_shader);
+		//nanosuit.draw(lighting_shader, true);
 
 		// render boxes
 		reflective_shader.use();
+		//glm::mat4 temp;
+		//temp = glm::translate(temp, glm::vec3(0.0f, 0.0f, 0.0f));
 		reflective_shader.set_mat4("model", model);
 		reflective_shader.set_mat4("view", view);
 		reflective_shader.set_mat4("projection", projection);
 		reflective_shader.set_vec3("camera_pos", camera.m_position);
-		glBindVertexArray(cube_vao);
+		//glBindVertexArray(cube_vao);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_texture);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-		glBindVertexArray(0);
+		nanosuit.draw(reflective_shader, false);
+		//glDrawArrays(GL_TRIANGLES, 0, 36);
+		//glBindVertexArray(0);
 		
 		glDepthFunc(GL_LEQUAL);
 		//glDepthMask(GL_FALSE);
@@ -524,30 +527,6 @@ int main()
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 		//glDepthMask(GL_TRUE);
 		glDepthFunc(GL_LESS);
-
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-		blending_shader.use();
-		glBindVertexArray(plane_vao);
-		int j = 0;
-
-		glDisable(GL_CULL_FACE);
-
-		for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
-		{
-			model = glm::mat4();
-			model = glm::translate(model, it->second);
-			blending_shader.set_mat4("model", model);
-
-			normal_matrix = glm::mat3(glm::transpose(glm::inverse(view * model)));
-			blending_shader.set_mat3("normal_matrix", normal_matrix);
-
-			glBindTexture(GL_TEXTURE_2D, transparent_window_texture);
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-		}
-
-		glDisable(GL_BLEND);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glDisable(GL_DEPTH_TEST);

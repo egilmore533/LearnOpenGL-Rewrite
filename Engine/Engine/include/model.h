@@ -38,9 +38,10 @@ public:
 
 	/**
 	* @brief	simple draw loops over each of the meshes to call their respective Draw function
-	* @param shader		the shade to use to draw the Meshes.	
+	* @param shader			the shade to use to draw the Meshes.
+	* @param use_textures	flag to turn off binding textures when drawing the meshes
 	*/
-	void draw(Shader shader);
+	void draw(Shader shader, bool use_textures);
 
 private:
 	// Model Data

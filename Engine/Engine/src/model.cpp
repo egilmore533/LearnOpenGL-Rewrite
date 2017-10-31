@@ -10,11 +10,11 @@ Model::Model(char *filepath)
 	load_model(filepath);
 }
 
-void Model::draw(Shader shader)
+void Model::draw(Shader shader, bool use_textures)
 {
 	for (int i = 0; i < m_meshes.size(); i++)
 	{
-		m_meshes[i].draw(shader);
+		m_meshes[i].draw(shader, use_textures);
 	}
 }
 

@@ -64,10 +64,11 @@ public:
 	Mesh(std::vector<vertex> vertices, std::vector<unsigned int> indices, std::vector<texture> textures);
 
 	/**
-	* @brief	draws the mesh with the given shader program by binding each texture and using glDrawElements
-	* @param shader		the shader program to draw this Mesh
+	* @brief	draws the mesh with the given shader program (binding each texture if enabled) and using glDrawElements
+	* @param shader			the shader program to draw this Mesh
+	* @param use_textures	flag to turn off binding textures
 	*/
-	void draw(Shader shader);
+	void draw(Shader shader, bool use_textures);
 
 	// Mesh Data
 	std::vector<vertex> m_vertices; 			/**< a vector of all the vertices in this Mesh, each containing position, normal, and texture_coordinates */

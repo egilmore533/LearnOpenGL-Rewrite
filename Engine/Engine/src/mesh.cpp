@@ -9,44 +9,47 @@ Mesh::Mesh(std::vector<vertex> vertices, std::vector<unsigned int> indices, std:
 	setup_mesh();
 }
 
-void Mesh::draw(Shader shader)
+void Mesh::draw(Shader shader, bool use_textures)
 {
-	int diffuse_num = 1;
-	int specular_num = 1;
-	int emission_num = 1;
-	int normal_num = 1;
-	int height_num = 1;
-
-	for (int i = 0; i < m_textures.size(); i++)
+	if (use_textures)
 	{
-		glActiveTexture(GL_TEXTURE0 + i);
+		int diffuse_num = 1;
+		int specular_num = 1;
+		int emission_num = 1;
+		int normal_num = 1;
+		int height_num = 1;
 
-		std::string name;
-
-		switch (m_textures[i].type)
+		for (int i = 0; i < m_textures.size(); i++)
 		{
-		case DIFFUSE_MAP:
-			name = "diffuse_map" + diffuse_num++;
-			break;
-		case SPECULAR_MAP:
-			name = "specular_map" + specular_num++;
-			break;
-		case EMISSION_MAP:
-			name = "emission_map" + emission_num++;
-			break;
-		case NORMAL_MAP:
-			name = "normal_map" + normal_num++;
-			break;
-		case HEIGHT_MAP:
-			name = "height_map" + height_num++;
-			break;
+			glActiveTexture(GL_TEXTURE0 + i);
+
+			std::string name;
+
+			switch (m_textures[i].type)
+			{
+			case DIFFUSE_MAP:
+				name = "diffuse_map" + diffuse_num++;
+				break;
+			case SPECULAR_MAP:
+				name = "specular_map" + specular_num++;
+				break;
+			case EMISSION_MAP:
+				name = "emission_map" + emission_num++;
+				break;
+			case NORMAL_MAP:
+				name = "normal_map" + normal_num++;
+				break;
+			case HEIGHT_MAP:
+				name = "height_map" + height_num++;
+				break;
+			}
+
+			shader.set_float("material." + name, i);
+			glBindTexture(GL_TEXTURE_2D, m_textures[i].id);
 		}
 
-		shader.set_float("material." + name, i);
-		glBindTexture(GL_TEXTURE_2D, m_textures[i].id);
+		glActiveTexture(GL_TEXTURE0);
 	}
-
-	glActiveTexture(GL_TEXTURE0);
 
 	// draw mesh
 	glBindVertexArray(vao);
