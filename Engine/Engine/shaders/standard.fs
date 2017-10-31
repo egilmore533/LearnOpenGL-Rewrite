@@ -7,6 +7,7 @@ struct Material {
 	sampler2D normal_map1;
 	sampler2D height_map1;
 	sampler2D emission_map1;
+	sampler2D reflection_map1;
     float shininess;
 }; 
 
@@ -56,9 +57,13 @@ uniform Directional_Light directional_light;
 uniform Point_Light point_lights[MAX_POINT_LIGHTS];
 uniform Spot_Light spot_light;
 
+uniform vec3 camera_pos;
+uniform samplerCube skybox;
+
 vec4 calulate_directional_light(Directional_Light light, vec3 normal, vec3 view_direction);
 vec4 calulate_point_light(Point_Light light, vec3 normal, vec3 fragment_position, vec3 view_direction);
 vec4 calculate_spot_light(Spot_Light light, vec3 normal, vec3 fragment_position, vec3 view_direction);
+vec4 calculate_reflection(vec3 normal);
 
 void main()
 {
@@ -76,7 +81,9 @@ void main()
 	// phase 3: spot light
     result += calculate_spot_light(spot_light, norm, fragment_position, view_direction);
 
-	frag_color = result;
+	vec4 reflect_color = calculate_reflection(norm);
+
+	frag_color = result + reflect_color;
 }
 
 
@@ -147,4 +154,12 @@ vec4 calculate_spot_light(Spot_Light light, vec3 normal, vec3 fragment_position,
 	specular_component	*= attenuation * intensity;
 
     return (ambient_component + diffuse_component + specular_component);
+}
+
+vec4 calculate_reflection(vec3 normal)
+{
+	vec3 view_direction = normalize(fragment_position - camera_pos);
+	vec3 reflection = reflect(view_direction, normalize(normal));
+	float reflect_intensity = texture(material.reflection_map1, texture_coordinates).r;
+	return texture(skybox, reflection) * reflect_intensity;
 }

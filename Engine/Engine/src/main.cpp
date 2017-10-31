@@ -77,6 +77,8 @@ int main()
 	Shader skybox_shader("shaders/skybox.vs", "shaders/skybox.fs");
 	Shader refraction_shader("shaders/reflection.vs", "shaders/refraction.fs");
 
+	Shader lighting_shader("shaders/standard.vs", "shaders/standard.fs");
+
 	// set up vertex data (and buffer(s)) and configure vertex attributes
 	// ------------------------------------------------------------------
 	float cube_vertices_ccw_winding_order[] = {
@@ -181,14 +183,20 @@ int main()
 		1.0f, -1.0f,  1.0f
 	};
 
-	std::vector<std::string> skybox_faces_filepaths = 
-	{
+	std::vector<std::string> skybox_faces_filepaths = {
 		"resources/textures/skybox/right.jpg",
 		"resources/textures/skybox/left.jpg",
 		"resources/textures/skybox/top.jpg",
 		"resources/textures/skybox/bottom.jpg",
 		"resources/textures/skybox/back.jpg",
 		"resources/textures/skybox/front.jpg"
+	};
+
+	glm::vec3 point_light_positions[] = {
+		glm::vec3(0.7f,  0.2f,  2.0f),
+		glm::vec3(2.3f, -3.3f, -4.0f),
+		glm::vec3(-4.0f,  2.0f, -12.0f),
+		glm::vec3(0.0f,  0.0f, -3.0f)
 	};
 
 	unsigned int vbo, cube_vao;
@@ -321,21 +329,76 @@ int main()
 		projection = glm::perspective(glm::radians(camera.m_zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
 		// note: currently we set the projection matrix each frame, but since the projection matrix rarely changes it's often best practice to set it outside the main loop only once.
 
-		// render mirror nanosuit
-		refraction_shader.use();
-		glm::mat4 temp;
-		temp = glm::translate(temp, glm::vec3(0.0f, -1.75f, 0.0f));
-		temp = glm::scale(temp, glm::vec3(0.2f));
-		refraction_shader.set_mat4("model", temp);
-		refraction_shader.set_mat4("view", view);
-		refraction_shader.set_mat4("projection", projection);
-		refraction_shader.set_vec3("camera_pos", camera.m_position);
-		//glBindVertexArray(cube_vao);
-		glActiveTexture(GL_TEXTURE0);
+		lighting_shader.use();
+		lighting_shader.set_mat4("view", view);
+		lighting_shader.set_mat4("projection", projection);
+
+		// directional light
+		lighting_shader.set_vec3("directional_light.direction", -0.2f, -1.0f, -0.3f);
+		lighting_shader.set_vec3("directional_light.ambient", 0.05f, 0.05f, 0.05f);
+		lighting_shader.set_vec3("directional_light.diffuse", 0.4f, 0.4f, 0.4f);
+		lighting_shader.set_vec3("directional_light.specular", 0.5f, 0.5f, 0.5f);
+		// point light 1
+		lighting_shader.set_vec3("point_lights[0].position", glm::vec3(view * glm::vec4(point_light_positions[0], 1.0f)));
+		lighting_shader.set_vec3("point_lights[0].ambient", 0.05f, 0.05f, 0.05f);
+		lighting_shader.set_vec3("point_lights[0].diffuse", 0.8f, 0.8f, 0.8f);
+		lighting_shader.set_vec3("point_lights[0].specular", 1.0f, 1.0f, 1.0f);
+		lighting_shader.set_float("point_lights[0].attenuation_constant", 1.0f);
+		lighting_shader.set_float("point_lights[0].attenuation_linear", 0.09);
+		lighting_shader.set_float("point_lights[0].attenuation_quadratic", 0.032);
+		// point light 2
+		lighting_shader.set_vec3("point_lights[1].position", glm::vec3(view * glm::vec4(point_light_positions[1], 1.0f)));
+		lighting_shader.set_vec3("point_lights[1].ambient", 0.05f, 0.05f, 0.05f);
+		lighting_shader.set_vec3("point_lights[1].diffuse", 0.8f, 0.8f, 0.8f);
+		lighting_shader.set_vec3("point_lights[1].specular", 1.0f, 1.0f, 1.0f);
+		lighting_shader.set_float("point_lights[1].attenuation_constant", 1.0f);
+		lighting_shader.set_float("point_lights[1].attenuation_linear", 0.09);
+		lighting_shader.set_float("point_lights[1].attenuation_quadratic", 0.032);
+		// point light 3
+		lighting_shader.set_vec3("point_lights[2].position", glm::vec3(view * glm::vec4(point_light_positions[2], 1.0f)));
+		lighting_shader.set_vec3("point_lights[2].ambient", 0.05f, 0.05f, 0.05f);
+		lighting_shader.set_vec3("point_lights[2].diffuse", 0.8f, 0.8f, 0.8f);
+		lighting_shader.set_vec3("point_lights[2].specular", 1.0f, 1.0f, 1.0f);
+		lighting_shader.set_float("point_lights[2].attenuation_constant", 1.0f);
+		lighting_shader.set_float("point_lights[2].attenuation_linear", 0.09);
+		lighting_shader.set_float("point_lights[2].attenuation_quadratic", 0.032);
+		// point light 4
+		lighting_shader.set_vec3("point_lights[3].position", glm::vec3(view * glm::vec4(point_light_positions[3], 1.0f)));
+		lighting_shader.set_vec3("point_lights[3].ambient", 0.05f, 0.05f, 0.05f);
+		lighting_shader.set_vec3("point_lights[3].diffuse", 0.8f, 0.8f, 0.8f);
+		lighting_shader.set_vec3("point_lights[3].specular", 1.0f, 1.0f, 1.0f);
+		lighting_shader.set_float("point_lights[3].attenuation_constant", 1.0f);
+		lighting_shader.set_float("point_lights[3].attenuation_linear", 0.09);
+		lighting_shader.set_float("point_lights[3].attenuation_quadratic", 0.032);
+		// spot_light
+		lighting_shader.set_vec3("spot_light.position", glm::vec3(view * glm::vec4(camera.m_position, 1.0f)));
+		lighting_shader.set_vec3("spot_light.direction", glm::vec3(view * glm::vec4(camera.m_front, 0.0f)));
+		lighting_shader.set_vec3("spot_light.ambient", 0.0f, 0.0f, 0.0f);
+		lighting_shader.set_vec3("spot_light.diffuse", 1.0f, 1.0f, 1.0f);
+		lighting_shader.set_vec3("spot_light.specular", 1.0f, 1.0f, 1.0f);
+		lighting_shader.set_float("spot_light.attenuation_constant", 1.0f);
+		lighting_shader.set_float("spot_light.attenuation_linear", 0.09);
+		lighting_shader.set_float("spot_light.attenuation_quadratic", 0.032);
+		lighting_shader.set_float("spot_light.cut_off", glm::cos(glm::radians(12.5f)));
+		lighting_shader.set_float("spot_light.outer_cut_off", glm::cos(glm::radians(15.0f)));
+
+		lighting_shader.set_vec3("material.specular", 0.5f, 0.5f, 0.5f);
+		lighting_shader.set_float("material.shininess", 64.0f);
+
+		// render the loaded model
+		glm::mat4 model;
+		glm::mat3 normal_matrix;
+		model = glm::translate(model, glm::vec3(0.0f, -1.75f, 0.0f)); // translate it down so it's at the center of the scene
+		model = glm::scale(model, glm::vec3(0.2));	// it's a bit too big for our scene, so scale it down
+		lighting_shader.set_mat4("model", model);
+
+		normal_matrix = glm::mat3(glm::transpose(glm::inverse(view * model)));
+		lighting_shader.set_mat3("normal_matrix", normal_matrix);
+		lighting_shader.set_mat4("projection", projection);
+		lighting_shader.set_vec3("camera_pos", camera.m_position);
+		glActiveTexture(GL_TEXTURE3);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_texture);
-		nanosuit.draw(refraction_shader, false);
-		//glDrawArrays(GL_TRIANGLES, 0, 36);
-		//glBindVertexArray(0);
+		nanosuit.draw(lighting_shader, true);
 		
 		glDepthFunc(GL_LEQUAL);
 		//glDepthMask(GL_FALSE);

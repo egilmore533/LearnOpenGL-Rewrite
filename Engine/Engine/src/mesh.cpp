@@ -18,6 +18,7 @@ void Mesh::draw(Shader shader, bool use_textures)
 		int emission_num = 1;
 		int normal_num = 1;
 		int height_num = 1;
+		int reflection_num = 1;
 
 		for (int i = 0; i < m_textures.size(); i++)
 		{
@@ -41,6 +42,9 @@ void Mesh::draw(Shader shader, bool use_textures)
 				break;
 			case HEIGHT_MAP:
 				name = "height_map" + height_num++;
+				break;
+			case REFLECTION_MAP:
+				name = "reflection_map" + reflection_num++;
 				break;
 			}
 
