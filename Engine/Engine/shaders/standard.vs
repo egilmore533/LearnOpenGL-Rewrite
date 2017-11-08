@@ -7,9 +7,15 @@ out vec3 fragment_position;
 out vec3 normal;
 out vec2 texture_coordinates;
 
+layout (std140) uniform matrices
+{
+	mat4 projection;
+	mat4 view;
+};
+
 uniform mat4 model;
-uniform mat4 view;
-uniform mat4 projection;
+// uniform mat4 view;
+// uniform mat4 projection;
 uniform mat3 normal_matrix;
 
 void main()

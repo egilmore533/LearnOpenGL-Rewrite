@@ -199,6 +199,10 @@ int main()
 		glm::vec3(0.0f,  0.0f, -3.0f)
 	};
 
+	// camera/view transformation
+	glm::mat4 view;
+	glm::mat4 projection;
+
 	unsigned int vbo, cube_vao;
 	glGenVertexArrays(1, &cube_vao);
 	glGenBuffers(1, &vbo);
@@ -246,6 +250,45 @@ int main()
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
+
+	// Uniform Buffer Objects
+	// ----------------------
+
+	// first set the uniform block of the vertex shaders equal to the binding point (0)
+	unsigned int uniform_block_index_skybox = glGetUniformBlockIndex(skybox_shader.m_program_id, "matrices");
+	unsigned int uniform_block_index_refraction = glGetUniformBlockIndex(refraction_shader.m_program_id, "matrices");
+	unsigned int uniform_block_index_lighting = glGetUniformBlockIndex(lighting_shader.m_program_id, "matrices");
+
+	glUniformBlockBinding(skybox_shader.m_program_id, uniform_block_index_skybox, 0);
+	glUniformBlockBinding(refraction_shader.m_program_id, uniform_block_index_refraction, 0);
+	glUniformBlockBinding(skybox_shader.m_program_id, uniform_block_index_lighting, 0);
+
+	// next create the actual uniform buffer object and bind the buffer to the binding point (0)
+	unsigned int ubo_matrices;
+	glGenBuffers(1, &ubo_matrices);
+
+	glBindBuffer(GL_UNIFORM_BUFFER, ubo_matrices);
+	glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), NULL, GL_STATIC_DRAW);
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+	glBindBufferRange(GL_UNIFORM_BUFFER, 0, ubo_matrices, 0, 2 * sizeof(glm::mat4));
+
+	// now fill the buffer using glBufferSubData 
+	// which lets you insert/update certain parts of a buffer but the buffer needs to have enough allocated 
+	// memory which we have already done in the previous step
+	
+	// this is an example of how it works positioned next to the code that created the ubo so I can find it easily
+	// I still need to do this in each game loop
+	projection = glm::perspective(glm::radians(camera.m_zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
+	glBindBuffer(GL_UNIFORM_BUFFER, ubo_matrices);
+	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+	view = camera.get_view_matrix();
+	glBindBuffer(GL_UNIFORM_BUFFER, ubo_matrices);
+	glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(projection));
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
 
 	// load models
 	// -----------
@@ -322,16 +365,18 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		glEnable(GL_CULL_FACE);
 
-		// camera/view transformation
-		glm::mat4 view = camera.get_view_matrix();
-
-		glm::mat4 projection;
+		// update the projection and view matrices inside the uniform block
 		projection = glm::perspective(glm::radians(camera.m_zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
-		// note: currently we set the projection matrix each frame, but since the projection matrix rarely changes it's often best practice to set it outside the main loop only once.
+		glBindBuffer(GL_UNIFORM_BUFFER, ubo_matrices);
+		glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));
+		glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+		view = camera.get_view_matrix();
+		glBindBuffer(GL_UNIFORM_BUFFER, ubo_matrices);
+		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
+		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
 		lighting_shader.use();
-		lighting_shader.set_mat4("view", view);
-		lighting_shader.set_mat4("projection", projection);
 
 		// directional light
 		lighting_shader.set_vec3("directional_light.direction", -0.2f, -1.0f, -0.3f);
@@ -394,7 +439,6 @@ int main()
 
 		normal_matrix = glm::mat3(glm::transpose(glm::inverse(view * model)));
 		lighting_shader.set_mat3("normal_matrix", normal_matrix);
-		lighting_shader.set_mat4("projection", projection);
 		lighting_shader.set_vec3("camera_pos", camera.m_position);
 		glActiveTexture(GL_TEXTURE3);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_texture);
@@ -404,8 +448,7 @@ int main()
 		//glDepthMask(GL_FALSE);
 		skybox_shader.use();
 		glm::mat4 view_no_translation = glm::mat4(glm::mat3(camera.get_view_matrix()));
-		skybox_shader.set_mat4("view", view_no_translation);
-		skybox_shader.set_mat4("projection", projection);
+		skybox_shader.set_mat4("view_no_translation", view_no_translation);
 		glBindVertexArray(skybox_vao);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_texture);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
