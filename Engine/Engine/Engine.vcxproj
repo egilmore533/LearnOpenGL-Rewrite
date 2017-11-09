@@ -171,6 +171,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\blending.fs" />
+    <None Include="shaders\explode.fs" />
+    <None Include="shaders\explode.gs" />
+    <None Include="shaders\explode.vs" />
     <None Include="shaders\geometry_example.fs" />
     <None Include="shaders\geometry_example.gs" />
     <None Include="shaders\geometry_example.vs" />

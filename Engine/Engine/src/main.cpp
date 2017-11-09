@@ -75,9 +75,7 @@ int main()
 	Shader simple_shader("shaders/simple.vs", "shaders/simple.fs");
 	Shader post_processing_shader("shaders/simple.vs", "shaders/kernel.fs");
 	Shader skybox_shader("shaders/skybox.vs", "shaders/skybox.fs");
-	Shader refraction_shader("shaders/reflection.vs", "shaders/refraction.fs");
-	Shader lighting_shader("shaders/standard.vs", "shaders/standard.fs");
-	Shader geo_example_shader("shaders/geometry_example.vs", "shaders/geometry_example.fs", "shaders/geometry_example.gs");
+	Shader explode_shader("shaders/explode.vs", "shaders/explode.fs", "shaders/explode.gs");
 
 	// set up vertex data (and buffer(s)) and configure vertex attributes
 	// ------------------------------------------------------------------
@@ -210,25 +208,6 @@ int main()
 	glm::mat4 view;
 	glm::mat4 projection;
 
-	unsigned int vbo, cube_vao;
-	glGenVertexArrays(1, &cube_vao);
-	glGenBuffers(1, &vbo);
-
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(cube_vertices_ccw_winding_order), cube_vertices_ccw_winding_order, GL_STATIC_DRAW);
-
-	glBindVertexArray(cube_vao);
-
-	// position attribute
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-	// normal attribute
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-	// texel attribute
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-	glEnableVertexAttribArray(2);
-
 	// screen quad vao
 	unsigned int quad_vao, quad_vbo;
 
@@ -258,32 +237,15 @@ int main()
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
-	//geometry example vbo, vao
-	unsigned int geo_vao, geo_vbo;
-
-	glGenVertexArrays(1, &geo_vao);
-	glGenBuffers(1, &geo_vbo);
-
-	glBindVertexArray(geo_vao);
-	glBindBuffer(GL_ARRAY_BUFFER, geo_vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(geometry_example_points), &geometry_example_points, GL_STATIC_DRAW);
-
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(2 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-
 	// Uniform Buffer Objects
 	// ----------------------
 
 	// first set the uniform block of the vertex shaders equal to the binding point (0)
 	unsigned int uniform_block_index_skybox = glGetUniformBlockIndex(skybox_shader.m_program_id, "matrices");
-	unsigned int uniform_block_index_refraction = glGetUniformBlockIndex(refraction_shader.m_program_id, "matrices");
-	unsigned int uniform_block_index_lighting = glGetUniformBlockIndex(lighting_shader.m_program_id, "matrices");
+	unsigned int uniform_block_index_explode = glGetUniformBlockIndex(explode_shader.m_program_id, "matrices");
 
 	glUniformBlockBinding(skybox_shader.m_program_id, uniform_block_index_skybox, 0);
-	glUniformBlockBinding(refraction_shader.m_program_id, uniform_block_index_refraction, 0);
-	glUniformBlockBinding(skybox_shader.m_program_id, uniform_block_index_lighting, 0);
+	glUniformBlockBinding(explode_shader.m_program_id, uniform_block_index_explode, 0);
 
 	// next create the actual uniform buffer object and bind the buffer to the binding point (0)
 	unsigned int ubo_matrices;
@@ -371,6 +333,7 @@ int main()
 		current_time = glfwGetTime();
 		delta_time = current_time - last_frame;
 		last_frame = current_time;
+		std::cout << "current time: " << current_time << std::endl;
 
 		
 		// update everything
@@ -398,73 +361,14 @@ int main()
 		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-		lighting_shader.use();
-
-		// directional light
-		lighting_shader.set_vec3("directional_light.direction", -0.2f, -1.0f, -0.3f);
-		lighting_shader.set_vec3("directional_light.ambient", 0.05f, 0.05f, 0.05f);
-		lighting_shader.set_vec3("directional_light.diffuse", 0.4f, 0.4f, 0.4f);
-		lighting_shader.set_vec3("directional_light.specular", 0.5f, 0.5f, 0.5f);
-		// point light 1
-		lighting_shader.set_vec3("point_lights[0].position", glm::vec3(view * glm::vec4(point_light_positions[0], 1.0f)));
-		lighting_shader.set_vec3("point_lights[0].ambient", 0.05f, 0.05f, 0.05f);
-		lighting_shader.set_vec3("point_lights[0].diffuse", 0.8f, 0.8f, 0.8f);
-		lighting_shader.set_vec3("point_lights[0].specular", 1.0f, 1.0f, 1.0f);
-		lighting_shader.set_float("point_lights[0].attenuation_constant", 1.0f);
-		lighting_shader.set_float("point_lights[0].attenuation_linear", 0.09);
-		lighting_shader.set_float("point_lights[0].attenuation_quadratic", 0.032);
-		// point light 2
-		lighting_shader.set_vec3("point_lights[1].position", glm::vec3(view * glm::vec4(point_light_positions[1], 1.0f)));
-		lighting_shader.set_vec3("point_lights[1].ambient", 0.05f, 0.05f, 0.05f);
-		lighting_shader.set_vec3("point_lights[1].diffuse", 0.8f, 0.8f, 0.8f);
-		lighting_shader.set_vec3("point_lights[1].specular", 1.0f, 1.0f, 1.0f);
-		lighting_shader.set_float("point_lights[1].attenuation_constant", 1.0f);
-		lighting_shader.set_float("point_lights[1].attenuation_linear", 0.09);
-		lighting_shader.set_float("point_lights[1].attenuation_quadratic", 0.032);
-		// point light 3
-		lighting_shader.set_vec3("point_lights[2].position", glm::vec3(view * glm::vec4(point_light_positions[2], 1.0f)));
-		lighting_shader.set_vec3("point_lights[2].ambient", 0.05f, 0.05f, 0.05f);
-		lighting_shader.set_vec3("point_lights[2].diffuse", 0.8f, 0.8f, 0.8f);
-		lighting_shader.set_vec3("point_lights[2].specular", 1.0f, 1.0f, 1.0f);
-		lighting_shader.set_float("point_lights[2].attenuation_constant", 1.0f);
-		lighting_shader.set_float("point_lights[2].attenuation_linear", 0.09);
-		lighting_shader.set_float("point_lights[2].attenuation_quadratic", 0.032);
-		// point light 4
-		lighting_shader.set_vec3("point_lights[3].position", glm::vec3(view * glm::vec4(point_light_positions[3], 1.0f)));
-		lighting_shader.set_vec3("point_lights[3].ambient", 0.05f, 0.05f, 0.05f);
-		lighting_shader.set_vec3("point_lights[3].diffuse", 0.8f, 0.8f, 0.8f);
-		lighting_shader.set_vec3("point_lights[3].specular", 1.0f, 1.0f, 1.0f);
-		lighting_shader.set_float("point_lights[3].attenuation_constant", 1.0f);
-		lighting_shader.set_float("point_lights[3].attenuation_linear", 0.09);
-		lighting_shader.set_float("point_lights[3].attenuation_quadratic", 0.032);
-		// spot_light
-		lighting_shader.set_vec3("spot_light.position", glm::vec3(view * glm::vec4(camera.m_position, 1.0f)));
-		lighting_shader.set_vec3("spot_light.direction", glm::vec3(view * glm::vec4(camera.m_front, 0.0f)));
-		lighting_shader.set_vec3("spot_light.ambient", 0.0f, 0.0f, 0.0f);
-		lighting_shader.set_vec3("spot_light.diffuse", 1.0f, 1.0f, 1.0f);
-		lighting_shader.set_vec3("spot_light.specular", 1.0f, 1.0f, 1.0f);
-		lighting_shader.set_float("spot_light.attenuation_constant", 1.0f);
-		lighting_shader.set_float("spot_light.attenuation_linear", 0.09);
-		lighting_shader.set_float("spot_light.attenuation_quadratic", 0.032);
-		lighting_shader.set_float("spot_light.cut_off", glm::cos(glm::radians(12.5f)));
-		lighting_shader.set_float("spot_light.outer_cut_off", glm::cos(glm::radians(15.0f)));
-
-		lighting_shader.set_vec3("material.specular", 0.5f, 0.5f, 0.5f);
-		lighting_shader.set_float("material.shininess", 64.0f);
-
-		// render the loaded model
 		glm::mat4 model;
-		glm::mat3 normal_matrix;
 		model = glm::translate(model, glm::vec3(0.0f, -1.75f, 0.0f)); // translate it down so it's at the center of the scene
 		model = glm::scale(model, glm::vec3(0.2));	// it's a bit too big for our scene, so scale it down
-		lighting_shader.set_mat4("model", model);
+		explode_shader.use();
+		explode_shader.set_mat4("model", model);
 
-		normal_matrix = glm::mat3(glm::transpose(glm::inverse(view * model)));
-		lighting_shader.set_mat3("normal_matrix", normal_matrix);
-		lighting_shader.set_vec3("camera_pos", camera.m_position);
-		glActiveTexture(GL_TEXTURE3);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_texture);
-		nanosuit.draw(lighting_shader, true);
+		explode_shader.set_float("time", current_time);
+		nanosuit.draw(explode_shader, true);
 		
 		glDepthFunc(GL_LEQUAL);
 		//glDepthMask(GL_FALSE);
@@ -476,10 +380,6 @@ int main()
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 		//glDepthMask(GL_TRUE);
 		glDepthFunc(GL_LESS);
-
-		geo_example_shader.use();
-		glBindVertexArray(geo_vao);
-		glDrawArrays(GL_POINTS, 0, 4);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glDisable(GL_DEPTH_TEST);
@@ -508,8 +408,6 @@ int main()
 
 	// optional: de-allocate all resources once they've outlived their purpose:
 	// ------------------------------------------------------------------------
-	glDeleteVertexArrays(1, &cube_vao);
-	glDeleteBuffers(1, &vbo);
 	glDeleteVertexArrays(1, &quad_vao);
 	glDeleteBuffers(1, &quad_vbo);
 

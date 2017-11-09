@@ -46,6 +46,9 @@
     <Filter Include="Shader Files\GeometryExample">
       <UniqueIdentifier>{69bc7b2c-84d8-4f18-945e-bee12d4d0289}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shader Files\Explode">
+      <UniqueIdentifier>{08842277-2810-4609-af54-8823dcd04e44}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -144,6 +147,15 @@
     </None>
     <None Include="shaders\geometry_example.vs">
       <Filter>Shader Files\GeometryExample</Filter>
+    </None>
+    <None Include="shaders\explode.gs">
+      <Filter>Shader Files\Explode</Filter>
+    </None>
+    <None Include="shaders\explode.fs">
+      <Filter>Shader Files\Explode</Filter>
+    </None>
+    <None Include="shaders\explode.vs">
+      <Filter>Shader Files\Explode</Filter>
     </None>
   </ItemGroup>
 </Project>
