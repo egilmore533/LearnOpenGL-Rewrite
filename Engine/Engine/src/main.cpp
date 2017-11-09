@@ -76,8 +76,8 @@ int main()
 	Shader post_processing_shader("shaders/simple.vs", "shaders/kernel.fs");
 	Shader skybox_shader("shaders/skybox.vs", "shaders/skybox.fs");
 	Shader refraction_shader("shaders/reflection.vs", "shaders/refraction.fs");
-
 	Shader lighting_shader("shaders/standard.vs", "shaders/standard.fs");
+	Shader geo_example_shader("shaders/geometry_example.vs", "shaders/geometry_example.fs", "shaders/geometry_example.gs");
 
 	// set up vertex data (and buffer(s)) and configure vertex attributes
 	// ------------------------------------------------------------------
@@ -199,6 +199,13 @@ int main()
 		glm::vec3(0.0f,  0.0f, -3.0f)
 	};
 
+	float geometry_example_points[] = {
+		-0.5f, 0.5f, // top-left
+		0.5f, 0.5f, // top-right
+		0.5f, -0.5f, // bottom-right
+		-0.5f, -0.5f // bottom-left
+	};
+
 	// camera/view transformation
 	glm::mat4 view;
 	glm::mat4 projection;
@@ -249,6 +256,19 @@ int main()
 	glBufferData(GL_ARRAY_BUFFER, sizeof(skybox_vertices), &skybox_vertices, GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	//geometry example vbo, vao
+	unsigned int geo_vao, geo_vbo;
+
+	glGenVertexArrays(1, &geo_vao);
+	glGenBuffers(1, &geo_vbo);
+
+	glBindVertexArray(geo_vao);
+	glBindBuffer(GL_ARRAY_BUFFER, geo_vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(geometry_example_points), &geometry_example_points, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
 	// Uniform Buffer Objects
@@ -454,6 +474,10 @@ int main()
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 		//glDepthMask(GL_TRUE);
 		glDepthFunc(GL_LESS);
+
+		geo_example_shader.use();
+		glBindVertexArray(geo_vao);
+		glDrawArrays(GL_POINTS, 0, 4);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glDisable(GL_DEPTH_TEST);

@@ -18,6 +18,7 @@ enum Shader_Type
 {
 	VERTEX = 0,
 	FRAGMENT,
+	GEOMETRY,
 	PROGRAM
 };
 
@@ -34,8 +35,9 @@ public:
 	* @brief constructor to read, compile, and link a shader program written in GLSL
 	* @param *vertex_path		path to the vertex shader
 	* @param *fragment_path		path to the fragment shader
+	* @param *geometry_path		path to the geometry shader, default points to an empty array of characters (telling the constructor to ignore the geometry shader)
 	*/
-    Shader(const GLchar* vertexPath, const GLchar* fragmentPath);
+    Shader(const GLchar* vertex_path, const GLchar* fragment_path, const GLchar* geometry_path = "");
     
 	/**
 	* @brief activate the shader

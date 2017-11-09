@@ -43,6 +43,9 @@
     <Filter Include="Shader Files\Refraction">
       <UniqueIdentifier>{57e58c63-6f38-4813-8ee2-db595d668773}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shader Files\GeomtryExample">
+      <UniqueIdentifier>{69bc7b2c-84d8-4f18-945e-bee12d4d0289}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -132,6 +135,15 @@
     </None>
     <None Include="shaders\refraction.fs">
       <Filter>Shader Files\Refraction</Filter>
+    </None>
+    <None Include="shaders\geometry_example.fs">
+      <Filter>Shader Files\GeomtryExample</Filter>
+    </None>
+    <None Include="shaders\geometry_example.gs">
+      <Filter>Shader Files\GeomtryExample</Filter>
+    </None>
+    <None Include="shaders\geometry_example.vs">
+      <Filter>Shader Files\GeomtryExample</Filter>
     </None>
   </ItemGroup>
 </Project>
