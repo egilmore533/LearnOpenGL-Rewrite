@@ -13,41 +13,44 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Shader Files">
+    <Filter Include="Shader Programs">
       <UniqueIdentifier>{7794d119-6e25-48a0-9ce5-190864206b1e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Shader Files\Standard">
+    <Filter Include="Shader Programs\Standard">
       <UniqueIdentifier>{18b2575c-b274-4c25-89c5-ae6682d55746}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Shader Files\Lamp">
+    <Filter Include="Shader Programs\Lamp">
       <UniqueIdentifier>{5151abe3-14bc-4019-a69b-a6479cdc783d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Shader Files\OutlineShader">
+    <Filter Include="Shader Programs\OutlineShader">
       <UniqueIdentifier>{ee52c43c-424d-4599-8320-6b21f19317d1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Shader Files\Blending">
+    <Filter Include="Shader Programs\Blending">
       <UniqueIdentifier>{87b463e2-4c73-48a8-bf7d-cec5291a3fb5}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Shader Files\Simple">
+    <Filter Include="Shader Programs\Simple">
       <UniqueIdentifier>{e2948376-7f87-4043-9eb2-cad788b7e7a1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Shader Files\PostProcessing">
+    <Filter Include="Shader Programs\PostProcessing">
       <UniqueIdentifier>{46719221-176f-4c8d-a556-fc0870526436}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Shader Files\Sybox">
+    <Filter Include="Shader Programs\Sybox">
       <UniqueIdentifier>{d72f6b5b-9d46-4f5a-ad2e-049ea60e1bec}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Shader Files\Reflective">
+    <Filter Include="Shader Programs\Reflective">
       <UniqueIdentifier>{6c8616c9-daee-4323-ba98-b436b22b3918}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Shader Files\Refraction">
+    <Filter Include="Shader Programs\Refraction">
       <UniqueIdentifier>{57e58c63-6f38-4813-8ee2-db595d668773}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Shader Files\GeometryExample">
+    <Filter Include="Shader Programs\GeometryExample">
       <UniqueIdentifier>{69bc7b2c-84d8-4f18-945e-bee12d4d0289}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Shader Files\Explode">
+    <Filter Include="Shader Programs\Explode">
       <UniqueIdentifier>{08842277-2810-4609-af54-8823dcd04e44}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shader Programs\Normal Visualizer">
+      <UniqueIdentifier>{959fd66c-d4ed-4a42-b045-51a0b97c4fb6}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -92,70 +95,79 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\standard.fs">
-      <Filter>Shader Files\Standard</Filter>
+      <Filter>Shader Programs\Standard</Filter>
     </None>
     <None Include="shaders\lamp.fs">
-      <Filter>Shader Files\Lamp</Filter>
+      <Filter>Shader Programs\Lamp</Filter>
     </None>
     <None Include="shaders\lamp.vs">
-      <Filter>Shader Files\Lamp</Filter>
+      <Filter>Shader Programs\Lamp</Filter>
     </None>
     <None Include="shaders\outline.fs">
-      <Filter>Shader Files\OutlineShader</Filter>
+      <Filter>Shader Programs\OutlineShader</Filter>
     </None>
     <None Include="shaders\blending.fs">
-      <Filter>Shader Files\Blending</Filter>
+      <Filter>Shader Programs\Blending</Filter>
     </None>
     <None Include="shaders\standard.vs">
-      <Filter>Shader Files\Standard</Filter>
+      <Filter>Shader Programs\Standard</Filter>
     </None>
     <None Include="shaders\simple.vs">
-      <Filter>Shader Files\Simple</Filter>
+      <Filter>Shader Programs\Simple</Filter>
     </None>
     <None Include="shaders\simple.fs">
-      <Filter>Shader Files\Simple</Filter>
+      <Filter>Shader Programs\Simple</Filter>
     </None>
     <None Include="shaders\inverse.fs">
-      <Filter>Shader Files\PostProcessing</Filter>
+      <Filter>Shader Programs\PostProcessing</Filter>
     </None>
     <None Include="shaders\grayscale.fs">
-      <Filter>Shader Files\PostProcessing</Filter>
+      <Filter>Shader Programs\PostProcessing</Filter>
     </None>
     <None Include="shaders\kernel.fs">
-      <Filter>Shader Files\PostProcessing</Filter>
+      <Filter>Shader Programs\PostProcessing</Filter>
     </None>
     <None Include="shaders\skybox.vs">
-      <Filter>Shader Files\Sybox</Filter>
+      <Filter>Shader Programs\Sybox</Filter>
     </None>
     <None Include="shaders\skybox.fs">
-      <Filter>Shader Files\Sybox</Filter>
+      <Filter>Shader Programs\Sybox</Filter>
     </None>
     <None Include="shaders\reflection.vs">
-      <Filter>Shader Files\Reflective</Filter>
+      <Filter>Shader Programs\Reflective</Filter>
     </None>
     <None Include="shaders\reflection.fs">
-      <Filter>Shader Files\Reflective</Filter>
+      <Filter>Shader Programs\Reflective</Filter>
     </None>
     <None Include="shaders\refraction.fs">
-      <Filter>Shader Files\Refraction</Filter>
+      <Filter>Shader Programs\Refraction</Filter>
     </None>
     <None Include="shaders\geometry_example.fs">
-      <Filter>Shader Files\GeometryExample</Filter>
+      <Filter>Shader Programs\GeometryExample</Filter>
     </None>
     <None Include="shaders\geometry_example.gs">
-      <Filter>Shader Files\GeometryExample</Filter>
+      <Filter>Shader Programs\GeometryExample</Filter>
     </None>
     <None Include="shaders\geometry_example.vs">
-      <Filter>Shader Files\GeometryExample</Filter>
+      <Filter>Shader Programs\GeometryExample</Filter>
     </None>
     <None Include="shaders\explode.gs">
-      <Filter>Shader Files\Explode</Filter>
+      <Filter>Shader Programs\Explode</Filter>
     </None>
     <None Include="shaders\explode.fs">
-      <Filter>Shader Files\Explode</Filter>
+      <Filter>Shader Programs\Explode</Filter>
     </None>
     <None Include="shaders\explode.vs">
-      <Filter>Shader Files\Explode</Filter>
+      <Filter>Shader Programs\Explode</Filter>
+    </None>
+    <None Include="shaders\normal_visualizer.vs">
+      <Filter>Shader Programs\Normal Visualizer</Filter>
+    </None>
+    <None Include="shaders\normal_visualizer.gs">
+      <Filter>Shader Programs\Normal Visualizer</Filter>
+    </None>
+    <None Include="shaders\normal_visualizer.fs">
+      <Filter>Shader Programs\Normal Visualizer</Filter>
     </None>
   </ItemGroup>
 </Project>

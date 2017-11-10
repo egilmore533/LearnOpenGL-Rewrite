@@ -182,6 +182,9 @@
     <None Include="shaders\kernel.fs" />
     <None Include="shaders\lamp.fs" />
     <None Include="shaders\lamp.vs" />
+    <None Include="shaders\normal_visualizer.fs" />
+    <None Include="shaders\normal_visualizer.gs" />
+    <None Include="shaders\normal_visualizer.vs" />
     <None Include="shaders\outline.fs" />
     <None Include="shaders\reflection.fs" />
     <None Include="shaders\reflection.vs" />

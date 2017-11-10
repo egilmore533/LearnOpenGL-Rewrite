@@ -75,7 +75,8 @@ int main()
 	Shader simple_shader("shaders/simple.vs", "shaders/simple.fs");
 	Shader post_processing_shader("shaders/simple.vs", "shaders/kernel.fs");
 	Shader skybox_shader("shaders/skybox.vs", "shaders/skybox.fs");
-	Shader explode_shader("shaders/explode.vs", "shaders/explode.fs", "shaders/explode.gs");
+	Shader standard_shader("shaders/standard.vs", "shaders/standard.fs");
+	Shader normal_visualizer_shader("shaders/normal_visualizer.vs", "shaders/normal_visualizer.fs", "shaders/normal_visualizer.gs");
 
 	// set up vertex data (and buffer(s)) and configure vertex attributes
 	// ------------------------------------------------------------------
@@ -242,10 +243,12 @@ int main()
 
 	// first set the uniform block of the vertex shaders equal to the binding point (0)
 	unsigned int uniform_block_index_skybox = glGetUniformBlockIndex(skybox_shader.m_program_id, "matrices");
-	unsigned int uniform_block_index_explode = glGetUniformBlockIndex(explode_shader.m_program_id, "matrices");
+	unsigned int uniform_block_index_nv = glGetUniformBlockIndex(normal_visualizer_shader.m_program_id, "matrices");
+	unsigned int uniform_block_index_standard = glGetUniformBlockIndex(standard_shader.m_program_id, "matrices");
 
 	glUniformBlockBinding(skybox_shader.m_program_id, uniform_block_index_skybox, 0);
-	glUniformBlockBinding(explode_shader.m_program_id, uniform_block_index_explode, 0);
+	glUniformBlockBinding(normal_visualizer_shader.m_program_id, uniform_block_index_nv, 0);
+	glUniformBlockBinding(standard_shader.m_program_id, uniform_block_index_standard, 0);
 
 	// next create the actual uniform buffer object and bind the buffer to the binding point (0)
 	unsigned int ubo_matrices;
@@ -272,7 +275,6 @@ int main()
 	glBindBuffer(GL_UNIFORM_BUFFER, ubo_matrices);
 	glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(projection));
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
 
 	// load models
 	// -----------
@@ -333,8 +335,6 @@ int main()
 		current_time = glfwGetTime();
 		delta_time = current_time - last_frame;
 		last_frame = current_time;
-		std::cout << "current time: " << current_time << std::endl;
-
 		
 		// update everything
 		process_input(window);
@@ -364,11 +364,15 @@ int main()
 		glm::mat4 model;
 		model = glm::translate(model, glm::vec3(0.0f, -1.75f, 0.0f)); // translate it down so it's at the center of the scene
 		model = glm::scale(model, glm::vec3(0.2));	// it's a bit too big for our scene, so scale it down
-		explode_shader.use();
-		explode_shader.set_mat4("model", model);
+		standard_shader.use();
+		standard_shader.set_mat4("model", model);
 
-		explode_shader.set_float("time", current_time);
-		nanosuit.draw(explode_shader, true);
+		nanosuit.draw(standard_shader, true);
+
+		normal_visualizer_shader.use();
+		normal_visualizer_shader.set_mat4("model", model);
+
+		nanosuit.draw(normal_visualizer_shader, true);
 		
 		glDepthFunc(GL_LEQUAL);
 		//glDepthMask(GL_FALSE);

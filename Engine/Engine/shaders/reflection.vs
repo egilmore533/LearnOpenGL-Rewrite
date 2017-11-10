@@ -9,7 +9,8 @@ layout (std140) uniform matrices
 {
 	mat4 projection;
 	mat4 view;
-};
+};
+
 
 uniform mat4 model;
 // uniform mat4 view;
