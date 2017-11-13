@@ -214,20 +214,6 @@ int main()
 		0.05f, 0.05f, 0.0f, 1.0f, 1.0f
 	};
 
-	glm::vec2 translations[100];
-	int index = 0;
-	float offset = 0.1f;
-	for (int y = -10; y < 10; y += 2)
-	{
-		for (int x = -10; x < 10; x += 2)
-		{
-			glm::vec2 translation;
-			translation.x = (float)x / 10.0f + offset;
-			translation.y = (float)y / 10.0f + offset;
-			translations[index++] = translation;
-		}
-	}
-
 	// camera/view transformation
 	glm::mat4 view;
 	glm::mat4 projection;
@@ -261,6 +247,27 @@ int main()
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
+	// instanced drawing objects
+	glm::vec2 translations[100];
+	int index = 0;
+	float offset = 0.1f;
+	for (int y = -10; y < 10; y += 2)
+	{
+		for (int x = -10; x < 10; x += 2)
+		{
+			glm::vec2 translation;
+			translation.x = (float)x / 10.0f + offset;
+			translation.y = (float)y / 10.0f + offset;
+			translations[index++] = translation;
+		}
+	}
+
+	unsigned int instance_array_vbo;
+	glGenBuffers(1, &instance_array_vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, instance_array_vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * 100, &translations[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
 	unsigned int instance_vao, instance_vbo;
 
 	glGenVertexArrays(1, &instance_vao);
@@ -270,11 +277,17 @@ int main()
 	glBindBuffer(GL_ARRAY_BUFFER, instance_vbo);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(instance_vertices), &instance_vertices, GL_STATIC_DRAW);
 
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
-
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(2 * sizeof(float)));
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	
 	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(2 * sizeof(float)));
+	
+	glEnableVertexAttribArray(2);
+	glBindBuffer(GL_ARRAY_BUFFER, instance_array_vbo);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glVertexAttribDivisor(2, 1);
 
 	// Uniform Buffer Objects
 	// ----------------------
@@ -396,20 +409,10 @@ int main()
 		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
+		
 		instancing_shader.use();
-		for (unsigned int i = 0; i < 100; i++)
-		{
-			std::stringstream ss;
-			std::string index;
-
-			ss << i;
-			index = ss.str();
-			instancing_shader.set_vec2(("offsets[" + index + "]").c_str(), translations[i]);
-		}
-
 		glBindVertexArray(instance_vao);
 		glDrawArraysInstanced(GL_TRIANGLES, 0, 6, 100);
-		
 		
 		glDepthFunc(GL_LEQUAL);
 		//glDepthMask(GL_FALSE);
