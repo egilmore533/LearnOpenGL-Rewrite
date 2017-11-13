@@ -52,6 +52,9 @@
     <Filter Include="Shader Programs\Normal Visualizer">
       <UniqueIdentifier>{959fd66c-d4ed-4a42-b045-51a0b97c4fb6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shader Programs\InstancingExample">
+      <UniqueIdentifier>{f13b761e-a60b-438c-99c2-6667809364fb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -168,6 +171,12 @@
     </None>
     <None Include="shaders\normal_visualizer.fs">
       <Filter>Shader Programs\Normal Visualizer</Filter>
+    </None>
+    <None Include="shaders\instancing_example.vs">
+      <Filter>Shader Programs\InstancingExample</Filter>
+    </None>
+    <None Include="shaders\instancing_example.fs">
+      <Filter>Shader Programs\InstancingExample</Filter>
     </None>
   </ItemGroup>
 </Project>

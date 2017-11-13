@@ -178,6 +178,8 @@
     <None Include="shaders\geometry_example.gs" />
     <None Include="shaders\geometry_example.vs" />
     <None Include="shaders\grayscale.fs" />
+    <None Include="shaders\instancing_example.fs" />
+    <None Include="shaders\instancing_example.vs" />
     <None Include="shaders\inverse.fs" />
     <None Include="shaders\kernel.fs" />
     <None Include="shaders\lamp.fs" />
