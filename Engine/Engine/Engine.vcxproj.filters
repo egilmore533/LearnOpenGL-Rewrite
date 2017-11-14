@@ -28,9 +28,6 @@
     <Filter Include="Shader Programs\Blending">
       <UniqueIdentifier>{87b463e2-4c73-48a8-bf7d-cec5291a3fb5}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Shader Programs\Simple">
-      <UniqueIdentifier>{e2948376-7f87-4043-9eb2-cad788b7e7a1}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Shader Programs\PostProcessing">
       <UniqueIdentifier>{46719221-176f-4c8d-a556-fc0870526436}</UniqueIdentifier>
     </Filter>
@@ -54,6 +51,12 @@
     </Filter>
     <Filter Include="Shader Programs\InstancingExample">
       <UniqueIdentifier>{f13b761e-a60b-438c-99c2-6667809364fb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shader Programs\SimpleTextured">
+      <UniqueIdentifier>{818f0564-301e-4323-a0bc-62a99c025c64}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shader Programs\SimpleTexturedQuad">
+      <UniqueIdentifier>{e2948376-7f87-4043-9eb2-cad788b7e7a1}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -116,10 +119,10 @@
       <Filter>Shader Programs\Standard</Filter>
     </None>
     <None Include="shaders\simple.vs">
-      <Filter>Shader Programs\Simple</Filter>
+      <Filter>Shader Programs\SimpleTexturedQuad</Filter>
     </None>
     <None Include="shaders\simple.fs">
-      <Filter>Shader Programs\Simple</Filter>
+      <Filter>Shader Programs\SimpleTexturedQuad</Filter>
     </None>
     <None Include="shaders\inverse.fs">
       <Filter>Shader Programs\PostProcessing</Filter>
@@ -177,6 +180,9 @@
     </None>
     <None Include="shaders\instancing_example.fs">
       <Filter>Shader Programs\InstancingExample</Filter>
+    </None>
+    <None Include="shaders\simple_textured.vs">
+      <Filter>Shader Programs\SimpleTextured</Filter>
     </None>
   </ItemGroup>
 </Project>

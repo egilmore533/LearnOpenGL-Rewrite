@@ -193,6 +193,7 @@
     <None Include="shaders\refraction.fs" />
     <None Include="shaders\simple.fs" />
     <None Include="shaders\simple.vs" />
+    <None Include="shaders\simple_textured.vs" />
     <None Include="shaders\skybox.fs" />
     <None Include="shaders\skybox.vs" />
     <None Include="shaders\standard.fs" />

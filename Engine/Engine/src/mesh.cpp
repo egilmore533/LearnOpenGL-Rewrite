@@ -106,4 +106,3 @@ void Mesh::setup_mesh()
 	// we are no longer using vao
 	glBindVertexArray(0);
 }
-

@@ -43,6 +43,12 @@ public:
 	*/
 	void draw(Shader shader, bool use_textures);
 
+	/**
+	* @brief	getter for the model's meshes array, quick hack so we can get set an attribute as an instanced array
+	* @return	the model's m_meshes
+	*/
+	std::vector<Mesh> get_meshes() { return m_meshes; }
+
 private:
 	// Model Data
 	std::vector<texture> m_textures_loaded;		/**< stores all the textures loaded so far, optimization to make sure textures aren't loaded more than once. */

@@ -71,6 +71,12 @@ public:
 	*/
 	void draw(Shader shader, bool use_textures);
 
+	/**
+	* @brief	getter for the vertex array object, quick hack so we can get set an attribute as an instanced array
+	* @return	the mesh's vao
+	*/
+	unsigned int get_vao() { return vao; }
+
 	// Mesh Data
 	std::vector<vertex> m_vertices; 			/**< a vector of all the vertices in this Mesh, each containing position, normal, and texture_coordinates */
 	std::vector<unsigned int> m_indices;		/**< a vector of all the vertex indices to be drawn (using glDrawElements) or this Mesh */
