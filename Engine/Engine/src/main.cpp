@@ -46,6 +46,7 @@ int main()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_SAMPLES, 4);
 
 	GLFWwindow* window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "LearnOpenGL", NULL, NULL);
 	if (window == NULL)
@@ -292,7 +293,7 @@ int main()
 
 	// generate a large list of semi-random model transformation matrices
 	// ------------------------------------------------------------------
-	int amount = 25000;
+	int amount = 10000;
 	glm::mat4 *model_matrices;
 	model_matrices = new glm::mat4[amount];
 	srand(glfwGetTime());
@@ -397,6 +398,8 @@ int main()
 	// --------------------------------------------------------------------------
 	//	end framebuffer configuration -------------------------------------------
 	// --------------------------------------------------------------------------
+
+	glEnable(GL_MULTISAMPLE);
 
 	while (!glfwWindowShouldClose(window))
 	{
