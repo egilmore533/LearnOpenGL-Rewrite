@@ -15,6 +15,7 @@
 #include "camera.h"
 #include "model.h"
 
+//	Forward Declarations ------------------------------------------------------------------
 void process_input(GLFWwindow *window);
 void mouse_callback(GLFWwindow* window, double x_pos, double y_pos);
 void scroll_callback(GLFWwindow* window, double x_offset, double y_offset);
@@ -22,33 +23,39 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 unsigned int load_texture(const char *path);
 unsigned int load_cubemap(std::vector<std::string> faces);
 
-const unsigned int SCREEN_WIDTH = 800;
-const unsigned int SCREEN_HEIGHT = 600;
+//	Settings ------------------------------------------------------------------
+const unsigned int screen_width = 800;
+const unsigned int screen_height = 600;
+const unsigned int samples = 4;
 
+//	Timing ------------------------------------------------------------------
 float current_time = 0.0f;	// Total Time since start of program
 float delta_time = 0.0f;	// Time between current frame and last frame
 float last_frame = 0.0f;	// Time of last frame
 
-///////CAMERA CODE/////////////////
-
-// camera
+//	Camera ------------------------------------------------------------------
 Camera camera(glm::vec3(0.0f, 55.0f, 155.0f));
-float last_x = SCREEN_WIDTH / 2.0f;
-float last_y = SCREEN_HEIGHT / 2.0f;
+float last_x = screen_width / 2.0f;
+float last_y = screen_height / 2.0f;
 bool first_mouse = true;
 
+//	Post-processing ---------------------------------------------------------
 int effect = 0;
 
 
 int main()
 {
+	// --------------------------------------------------------------------------
+	//	window configuration ----------------------------------------------------
+	// --------------------------------------------------------------------------
+
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	glfwWindowHint(GLFW_SAMPLES, 4);
+	glfwWindowHint(GLFW_SAMPLES, samples);
 
-	GLFWwindow* window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "LearnOpenGL", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(screen_width, screen_height, "LearnOpenGL", NULL, NULL);
 	if (window == NULL)
 	{
 		printf("Failed to create GLFW window\n");
@@ -73,14 +80,22 @@ int main()
 
 	stbi_set_flip_vertically_on_load(true);
 
+	// camera/view transformation
+	glm::mat4 view;
+	glm::mat4 projection;
+
+	// --------------------------------------------------------------------------
+	//	Shader Programs ---------------------------------------------------------
+	// --------------------------------------------------------------------------
+
 	Shader simple_shader("shaders/simple.vs", "shaders/simple.fs");
 	Shader post_processing_shader("shaders/simple.vs", "shaders/kernel.fs");
 	Shader skybox_shader("shaders/skybox.vs", "shaders/skybox.fs");
-	Shader simple_texture_shader("shaders/simple_textured.vs", "shaders/simple.fs");
-	Shader instance_shader("shaders/instancing_example.vs", "shaders/simple.fs");
+	
+	// --------------------------------------------------------------------------
+	//	vertex data -------------------------------------------------------------
+	// --------------------------------------------------------------------------
 
-	// set up vertex data (and buffer(s)) and configure vertex attributes
-	// ------------------------------------------------------------------
 	float cube_vertices_ccw_winding_order[] = {
 		// Back face
 		-0.5f, -0.5f, -0.5f, 0.0f,  0.0f, -1.0f,  0.0f, 0.0f, // Bottom-left
@@ -192,33 +207,21 @@ int main()
 		"resources/textures/skybox/front.jpg"
 	};
 
-	glm::vec3 point_light_positions[] = {
-		glm::vec3(0.7f,  0.2f,  2.0f),
-		glm::vec3(2.3f, -3.3f, -4.0f),
-		glm::vec3(-4.0f,  2.0f, -12.0f),
-		glm::vec3(0.0f,  0.0f, -3.0f)
+	// blinn-phong lighting
+	float plane_vertices[] = {
+		// positions            // normals         // texcoords
+		 10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,  10.0f,  0.0f,
+		-10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
+		-10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,   0.0f, 10.0f,
+
+		 10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,  10.0f,  0.0f,
+		-10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,   0.0f, 10.0f,
+		 10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,  10.0f, 10.0f
 	};
 
-	float geometry_example_points[] = {
-		-0.5f, 0.5f, 1.0f, 0.0f, 0.0f, // top-left
-		0.5f, 0.5f, 0.0f, 1.0f, 0.0f, // top-right
-		0.5f, -0.5f, 0.0f, 0.0f, 1.0f, // bottom-right
-		-0.5f, -0.5f, 1.0f, 1.0f, 0.0f // bottom-left
-	};
-
-	float instance_vertices[] = {
-		// positions // colors
-		-0.05f, -0.05f, 0.0f, 0.0f, 1.0f,
-		0.05f, -0.05f, 0.0f, 1.0f, 0.0f,
-		-0.05f, 0.05f, 1.0f, 0.0f, 0.0f,
-		-0.05f, 0.05f, 1.0f, 0.0f, 0.0f,
-		0.05f, -0.05f, 0.0f, 1.0f, 0.0f,
-		0.05f, 0.05f, 0.0f, 1.0f, 1.0f
-	};
-
-	// camera/view transformation
-	glm::mat4 view;
-	glm::mat4 projection;
+	// --------------------------------------------------------------------------
+	//	vertex array buffer configurations --------------------------------------
+	// --------------------------------------------------------------------------
 
 	// screen quad vao
 	unsigned int quad_vao, quad_vbo;
@@ -249,16 +252,35 @@ int main()
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
-	// Uniform Buffer Objects
-	// ----------------------
+	// blinn-phong lighting
+	unsigned int wood_vao, wood_vbo;
+
+	glGenVertexArrays(1, &wood_vao);
+	glGenBuffers(1, &wood_vbo);
+
+	glBindVertexArray(wood_vao);
+	glBindBuffer(GL_ARRAY_BUFFER, wood_vbo);
+
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+
+	glBindVertexArray(0);
+
+	// --------------------------------------------------------------------------
+	//	Uniform Buffer Objects Configuration -----------------------------------------------
+	// --------------------------------------------------------------------------
 	
 	// first set the uniform block of the vertex shaders equal to the binding point (0)
 	unsigned int uniform_block_index_skybox = glGetUniformBlockIndex(skybox_shader.m_program_id, "matrices");
-	unsigned int uniform_block_index_simple_texture = glGetUniformBlockIndex(simple_texture_shader.m_program_id, "matrices");
-
+	
 	glUniformBlockBinding(skybox_shader.m_program_id, uniform_block_index_skybox, 0);
-	glUniformBlockBinding(simple_texture_shader.m_program_id, uniform_block_index_simple_texture, 0);
-
+	
 	// next create the actual uniform buffer object and bind the buffer to the binding point (0)
 	unsigned int ubo_matrices;
 	glGenBuffers(1, &ubo_matrices);
@@ -275,7 +297,7 @@ int main()
 	
 	// this is an example of how it works positioned next to the code that created the ubo so I can find it easily
 	// I still need to do this in each game loop
-	projection = glm::perspective(glm::radians(camera.m_zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
+	projection = glm::perspective(glm::radians(camera.m_zoom), (float)screen_width / (float)screen_height, 0.1f, 100.0f);
 	glBindBuffer(GL_UNIFORM_BUFFER, ubo_matrices);
 	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
@@ -285,70 +307,9 @@ int main()
 	glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(projection));
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-	// load models
-	// -----------
-
-	Model planet("resources/objects/planet/planet.obj");
-	Model asteroid("resources/objects/rock/rock.obj");
-
-	// generate a large list of semi-random model transformation matrices
-	// ------------------------------------------------------------------
-	int amount = 10000;
-	glm::mat4 *model_matrices;
-	model_matrices = new glm::mat4[amount];
-	srand(glfwGetTime());
-	float radius = 100.0f;
-	float offset = 25.0f;
-	for (unsigned int i = 0; i < amount; i++)
-	{
-		glm::mat4 model;
-
-		// 1. translation: displace along the circle radius in range [-offset, offset]
-		float angle = (float)i / (float)amount * 360.0f;
-		float displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
-		float x = sin(angle) * radius + displacement;
-		displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
-		float y = displacement * 0.1f;
-		displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
-		float z = cos(angle) * radius + displacement;
-		model = glm::translate(model, glm::vec3(x, y, z));
-
-		// 2. scale between 0.05 and 0.25
-		float scale = (rand() % 20) / 100.0f + 0.05;
-		model = glm::scale(model, glm::vec3(scale));
-
-		// 3. add random rotation around a randomly picked rotation axis
-		float rotation_angle = (rand() % 360);
-		model = glm::rotate(model, rotation_angle, glm::vec3(0.4f, 0.6f, 0.8f));
-
-		model_matrices[i] = model;
-	}
-
-	unsigned int instance_vbo;
-	glGenBuffers(1, &instance_vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, instance_vbo);
-	glBufferData(GL_ARRAY_BUFFER, amount * sizeof(glm::mat4), &model_matrices[0], GL_STATIC_DRAW);
-
-	for (unsigned int i = 0; i < asteroid.get_meshes().size(); i++)
-	{
-		unsigned int current_mesh_vao = asteroid.get_meshes()[i].get_vao();
-		glBindVertexArray(current_mesh_vao);
-		// vertex attributes
-		GLsizei vec4_size = sizeof(glm::vec4);
-		glEnableVertexAttribArray(2);
-		glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 4 * vec4_size, (void*)0);
-		glEnableVertexAttribArray(3);
-		glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 4 * vec4_size, (void*)vec4_size);
-		glEnableVertexAttribArray(4);
-		glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, 4 * vec4_size, (void*)(vec4_size * 2));
-		glEnableVertexAttribArray(5);
-		glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, 4 * vec4_size, (void*)(vec4_size * 3));
-		
-		for (int i = 2; i < 6; i++)
-			glVertexAttribDivisor(i, 1);
-
-		glBindVertexArray(0);
-	}
+	// --------------------------------------------------------------------------
+	//	load textures -----------------------------------------------------------
+	// --------------------------------------------------------------------------
 
 	// not sure why these are don't need to be flipped but loading them unflipped fixes this quick issue
 	stbi_set_flip_vertically_on_load(false);
@@ -368,7 +329,7 @@ int main()
 		unsigned int texture_color_buffer_multisampled;
 		glGenTextures(1, &texture_color_buffer_multisampled);
 		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, texture_color_buffer_multisampled);
-			glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGB, SCREEN_WIDTH, SCREEN_HEIGHT, GL_TRUE);
+			glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, GL_RGB, screen_width, screen_height, GL_TRUE);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
@@ -379,7 +340,7 @@ int main()
 		unsigned int renderbuffer_object;
 		glGenRenderbuffers(1, &renderbuffer_object);
 		glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer_object);
-			glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_DEPTH24_STENCIL8, SCREEN_WIDTH, SCREEN_HEIGHT);
+			glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_DEPTH24_STENCIL8, screen_width, screen_height);
 		glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
 		// attach the renderbuffer to the currently bound framebuffer object
@@ -406,7 +367,7 @@ int main()
 		unsigned int screen_texture;
 		glGenTextures(1, &screen_texture);
 		glBindTexture(GL_TEXTURE_2D, screen_texture);
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, SCREEN_WIDTH, SCREEN_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, screen_width, screen_height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, screen_texture, 0); // we only need a color buffer here
@@ -416,10 +377,6 @@ int main()
 	
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	// --------------------------------------------------------------------------
-	//	end framebuffer configuration -------------------------------------------
-	// --------------------------------------------------------------------------
-
 	glEnable(GL_MULTISAMPLE);
 
 	simple_shader.use();
@@ -427,6 +384,11 @@ int main()
 
 	post_processing_shader.use();
 	post_processing_shader.set_int("screen_texture", 0);
+
+	// --------------------------------------------------------------------------
+	//	Main Loop ---------------------------------------------------------------
+	// --------------------------------------------------------------------------
+
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -441,56 +403,49 @@ int main()
 		// bind to framebuffer and draw scene normally
 		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_object);
 
-		glEnable(GL_DEPTH_TEST);
-		glDepthFunc(GL_LESS);
+		// --------------------------------------------------------------------------
+		//	Draw "Scene" to framebuffer ---------------------------------------------
+		// --------------------------------------------------------------------------
 
-		// draw/render everything
-		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-		glEnable(GL_CULL_FACE);
+			glEnable(GL_DEPTH_TEST);
+			glDepthFunc(GL_LESS);
 
-		// update the projection and view matrices inside the uniform block
-		projection = glm::perspective(glm::radians(camera.m_zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 1000.0f);
-		glBindBuffer(GL_UNIFORM_BUFFER, ubo_matrices);
-		glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));
-		glBindBuffer(GL_UNIFORM_BUFFER, 0);
+			glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+			glEnable(GL_CULL_FACE);
 
-		view = camera.get_view_matrix();
-		glBindBuffer(GL_UNIFORM_BUFFER, ubo_matrices);
-		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
-		glBindBuffer(GL_UNIFORM_BUFFER, 0);
+			// update the projection and view matrices inside the uniform block
+			projection = glm::perspective(glm::radians(camera.m_zoom), (float)screen_width / (float)screen_height, 0.1f, 1000.0f);
+			glBindBuffer(GL_UNIFORM_BUFFER, ubo_matrices);
+			glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));
+			glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-		simple_texture_shader.use();
-		glm::mat4 model;
-		model = glm::translate(model, glm::vec3(0.0f, -3.0f, 0.0f));
-		model = glm::scale(model, glm::vec3(4.0f, 4.0f, 4.0f));
-		simple_texture_shader.set_mat4("model", model);
-		planet.draw(simple_texture_shader, true);
-
-		instance_shader.use();
-		for (int i = 0; i < asteroid.get_meshes().size(); i++)
-		{
-			glBindVertexArray(asteroid.get_meshes()[i].get_vao());
-			glDrawElementsInstanced(GL_TRIANGLES, asteroid.get_meshes()[i].m_indices.size(), GL_UNSIGNED_INT, 0, amount);
-		}
+			view = camera.get_view_matrix();
+			glBindBuffer(GL_UNIFORM_BUFFER, ubo_matrices);
+			glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
+			glBindBuffer(GL_UNIFORM_BUFFER, 0);
 		
-		/*
-		glDepthFunc(GL_LEQUAL);
-		//glDepthMask(GL_FALSE);
-		skybox_shader.use();
-		glm::mat4 view_no_translation = glm::mat4(glm::mat3(camera.get_view_matrix()));
-		skybox_shader.set_mat4("view_no_translation", view_no_translation);
-		glBindVertexArray(skybox_vao);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_texture);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-		//glDepthMask(GL_TRUE);
-		glDepthFunc(GL_LESS);
-		*/
+		
+			glDepthFunc(GL_LEQUAL);
+			//glDepthMask(GL_FALSE);
+			skybox_shader.use();
+			glm::mat4 view_no_translation = glm::mat4(glm::mat3(camera.get_view_matrix()));
+			skybox_shader.set_mat4("view_no_translation", view_no_translation);
+			glBindVertexArray(skybox_vao);
+			glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_texture);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+			//glDepthMask(GL_TRUE);
+			glDepthFunc(GL_LESS);
+
+		// --------------------------------------------------------------------------
+		//	Finished Drawing "Scene" ------------------------------------------------
+		// --------------------------------------------------------------------------
+
 
 		// after drawing scene blit multisampled buffers to normal colorbuffer of intermediate fbo
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer_object);
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, intermediate_framebuffer_object);
-		glBlitFramebuffer(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		glBlitFramebuffer(0, 0, screen_width, screen_height, 0, 0, screen_width, screen_height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
 		// next render qaud with the scene's visuals as it's texture image
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
