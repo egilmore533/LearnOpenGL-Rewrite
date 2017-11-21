@@ -58,6 +58,9 @@
     <Filter Include="Shader Programs\SimpleTexturedQuad">
       <UniqueIdentifier>{e2948376-7f87-4043-9eb2-cad788b7e7a1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shader Programs\Blinn-Phong Lighting">
+      <UniqueIdentifier>{ad791568-1232-4189-b642-97ddff91f645}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -183,6 +186,12 @@
     </None>
     <None Include="shaders\simple_textured.vs">
       <Filter>Shader Programs\SimpleTextured</Filter>
+    </None>
+    <None Include="shaders\blinn_phong.vs">
+      <Filter>Shader Programs\Blinn-Phong Lighting</Filter>
+    </None>
+    <None Include="shaders\blinn_phong.fs">
+      <Filter>Shader Programs\Blinn-Phong Lighting</Filter>
     </None>
   </ItemGroup>
 </Project>

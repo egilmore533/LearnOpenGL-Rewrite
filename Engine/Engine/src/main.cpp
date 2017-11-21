@@ -34,7 +34,7 @@ float delta_time = 0.0f;	// Time between current frame and last frame
 float last_frame = 0.0f;	// Time of last frame
 
 //	Camera ------------------------------------------------------------------
-Camera camera(glm::vec3(0.0f, 55.0f, 155.0f));
+Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
 float last_x = screen_width / 2.0f;
 float last_y = screen_height / 2.0f;
 bool first_mouse = true;
@@ -91,55 +91,11 @@ int main()
 	Shader simple_shader("shaders/simple.vs", "shaders/simple.fs");
 	Shader post_processing_shader("shaders/simple.vs", "shaders/kernel.fs");
 	Shader skybox_shader("shaders/skybox.vs", "shaders/skybox.fs");
+	Shader blinn_phong_shader("shaders/blinn_phong.vs", "shaders/blinn_phong.fs");
 	
 	// --------------------------------------------------------------------------
 	//	vertex data -------------------------------------------------------------
 	// --------------------------------------------------------------------------
-
-	float cube_vertices_ccw_winding_order[] = {
-		// Back face
-		-0.5f, -0.5f, -0.5f, 0.0f,  0.0f, -1.0f,  0.0f, 0.0f, // Bottom-left
-		 0.5f,  0.5f, -0.5f, 0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
-		 0.5f, -0.5f, -0.5f, 0.0f,  0.0f, -1.0f, 1.0f, 0.0f, // bottom-right         
-		 0.5f,  0.5f, -0.5f, 0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
-		-0.5f, -0.5f, -0.5f, 0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
-		-0.5f,  0.5f, -0.5f, 0.0f,  0.0f, -1.0f, 0.0f, 1.0f, // top-left
-		// Front face
-		-0.5f, -0.5f,  0.5f, 0.0f,  0.0f, 1.0f,  0.0f, 0.0f, // bottom-left
-		 0.5f, -0.5f,  0.5f, 0.0f,  0.0f, 1.0f, 1.0f, 0.0f, // bottom-right
-		 0.5f,  0.5f,  0.5f, 0.0f,  0.0f, 1.0f,  1.0f, 1.0f, // top-right
-		 0.5f,  0.5f,  0.5f, 0.0f,  0.0f, 1.0f,  1.0f, 1.0f, // top-right
-		-0.5f,  0.5f,  0.5f, 0.0f,  0.0f, 1.0f, 0.0f, 1.0f, // top-left
-		-0.5f, -0.5f,  0.5f, 0.0f,  0.0f, 1.0f, 0.0f, 0.0f, // bottom-left
-		// Left face
-		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
-		-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-left
-		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
-		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
-		-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-right
-		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
-		// Right face
-		 0.5f,  0.5f,  0.5f, 1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
-		 0.5f, -0.5f, -0.5f, 1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
-		 0.5f,  0.5f, -0.5f, 1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-right         
-		 0.5f, -0.5f, -0.5f, 1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
-		 0.5f,  0.5f,  0.5f, 1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
-		 0.5f, -0.5f,  0.5f, 1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-left
-		// Bottom face
-		-0.5f, -0.5f, -0.5f, 0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
-		 0.5f, -0.5f, -0.5f, 0.0f, -1.0f,  0.0f, 1.0f, 1.0f, // top-left
-		 0.5f, -0.5f,  0.5f, 0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
-		 0.5f, -0.5f,  0.5f, 0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
-		-0.5f, -0.5f,  0.5f, 0.0f, -1.0f,  0.0f, 0.0f, 0.0f, // bottom-right
-		-0.5f, -0.5f, -0.5f, 0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
-		// Top face
-		-0.5f,  0.5f, -0.5f, 0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
-		 0.5f,  0.5f,  0.5f, 0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
-		 0.5f,  0.5f, -0.5f, 0.0f,  1.0f,  0.0f, 1.0f, 1.0f, // top-right     
-		 0.5f,  0.5f,  0.5f, 0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
-		-0.5f,  0.5f, -0.5f, 0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
-		-0.5f,  0.5f,  0.5f, 0.0f,  1.0f,  0.0f, 0.0f, 0.0f  // bottom-left
-	};
 
 	// vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
 	float simple_quad_vertices[] = {
@@ -210,13 +166,13 @@ int main()
 	// blinn-phong lighting
 	float plane_vertices[] = {
 		// positions            // normals         // texcoords
-		 10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,  10.0f,  0.0f,
-		-10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
-		-10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,   0.0f, 10.0f,
+		 1.0f, -0.5f,  1.0f,  0.0f, 1.0f, 0.0f,  1.0f,  0.0f,
+		-1.0f, -0.5f,  1.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
+		-1.0f, -0.5f, -1.0f,  0.0f, 1.0f, 0.0f,   0.0f, 1.0f,
 
-		 10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,  10.0f,  0.0f,
-		-10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,   0.0f, 10.0f,
-		 10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,  10.0f, 10.0f
+		 1.0f, -0.5f,  1.0f,  0.0f, 1.0f, 0.0f,  1.0f,  0.0f,
+		-1.0f, -0.5f, -1.0f,  0.0f, 1.0f, 0.0f,   0.0f, 1.0f,
+		 1.0f, -0.5f, -1.0f,  0.0f, 1.0f, 0.0f,  1.0f, 1.0f
 	};
 
 	// --------------------------------------------------------------------------
@@ -260,6 +216,7 @@ int main()
 
 	glBindVertexArray(wood_vao);
 	glBindBuffer(GL_ARRAY_BUFFER, wood_vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(plane_vertices), &plane_vertices, GL_STATIC_DRAW);
 
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
@@ -278,8 +235,10 @@ int main()
 	
 	// first set the uniform block of the vertex shaders equal to the binding point (0)
 	unsigned int uniform_block_index_skybox = glGetUniformBlockIndex(skybox_shader.m_program_id, "matrices");
+	unsigned int uniform_block_index_blinn_phong = glGetUniformBlockIndex(blinn_phong_shader.m_program_id, "matrices");
 	
 	glUniformBlockBinding(skybox_shader.m_program_id, uniform_block_index_skybox, 0);
+	glUniformBlockBinding(blinn_phong_shader.m_program_id, uniform_block_index_blinn_phong, 0);
 	
 	// next create the actual uniform buffer object and bind the buffer to the binding point (0)
 	unsigned int ubo_matrices;
@@ -308,6 +267,11 @@ int main()
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
 	// --------------------------------------------------------------------------
+	//	load models -------------------------------------------------------------
+	// --------------------------------------------------------------------------
+
+
+	// --------------------------------------------------------------------------
 	//	load textures -----------------------------------------------------------
 	// --------------------------------------------------------------------------
 
@@ -315,6 +279,7 @@ int main()
 	stbi_set_flip_vertically_on_load(false);
 	unsigned int skybox_texture = load_cubemap(skybox_faces_filepaths);
 	stbi_set_flip_vertically_on_load(true);
+	unsigned int wood_texture = load_texture("resources/textures/wood.png");
 
 	// --------------------------------------------------------------------------
 	//	framebuffer configuration -----------------------------------------------
@@ -385,6 +350,9 @@ int main()
 	post_processing_shader.use();
 	post_processing_shader.set_int("screen_texture", 0);
 
+	blinn_phong_shader.use();
+	blinn_phong_shader.set_int("floor_texture", 0);
+
 	// --------------------------------------------------------------------------
 	//	Main Loop ---------------------------------------------------------------
 	// --------------------------------------------------------------------------
@@ -400,6 +368,9 @@ int main()
 		// update everything
 		process_input(window);
 
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 		// bind to framebuffer and draw scene normally
 		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_object);
 
@@ -412,7 +383,7 @@ int main()
 
 			glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-			glEnable(GL_CULL_FACE);
+			//glEnable(GL_CULL_FACE);
 
 			// update the projection and view matrices inside the uniform block
 			projection = glm::perspective(glm::radians(camera.m_zoom), (float)screen_width / (float)screen_height, 0.1f, 1000.0f);
@@ -424,18 +395,27 @@ int main()
 			glBindBuffer(GL_UNIFORM_BUFFER, ubo_matrices);
 			glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
 			glBindBuffer(GL_UNIFORM_BUFFER, 0);
-		
-		
+
+			blinn_phong_shader.use();
+			blinn_phong_shader.set_vec3("view_position", camera.m_position);
+			blinn_phong_shader.set_vec3("light_position", glm::vec3(0.0f));
+			glBindVertexArray(wood_vao);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, wood_texture);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+			glBindVertexArray(0);
+			
+			/*
 			glDepthFunc(GL_LEQUAL);
-			//glDepthMask(GL_FALSE);
 			skybox_shader.use();
 			glm::mat4 view_no_translation = glm::mat4(glm::mat3(camera.get_view_matrix()));
 			skybox_shader.set_mat4("view_no_translation", view_no_translation);
 			glBindVertexArray(skybox_vao);
 			glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_texture);
 			glDrawArrays(GL_TRIANGLES, 0, 36);
-			//glDepthMask(GL_TRUE);
 			glDepthFunc(GL_LESS);
+			*/
+			
 
 		// --------------------------------------------------------------------------
 		//	Finished Drawing "Scene" ------------------------------------------------
