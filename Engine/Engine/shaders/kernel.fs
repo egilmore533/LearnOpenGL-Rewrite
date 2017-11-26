@@ -44,5 +44,7 @@ void main()
 		total_color += sample_from_texture[i] * kernel[i];
 	}
 
+	float gamma = 2.2;
 	frag_color = vec4(total_color, 1.0);
+	frag_color.rgb = pow(frag_color.rgb, vec3(1.0/gamma));
 }
