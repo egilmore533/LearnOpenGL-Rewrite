@@ -20,7 +20,7 @@ void process_input(GLFWwindow *window);
 void mouse_callback(GLFWwindow* window, double x_pos, double y_pos);
 void scroll_callback(GLFWwindow* window, double x_offset, double y_offset);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-unsigned int load_texture(const char *path);
+unsigned int load_texture(char const * path, bool gamma_correction);
 unsigned int load_cubemap(std::vector<std::string> faces);
 
 //	Settings ------------------------------------------------------------------
@@ -279,7 +279,7 @@ int main()
 	stbi_set_flip_vertically_on_load(false);
 	unsigned int skybox_texture = load_cubemap(skybox_faces_filepaths);
 	stbi_set_flip_vertically_on_load(true);
-	unsigned int wood_texture = load_texture("resources/textures/wood.png");
+	unsigned int wood_texture = load_texture("resources/textures/wood.png", true);
 
 	// --------------------------------------------------------------------------
 	//	framebuffer configuration -----------------------------------------------
@@ -368,7 +368,7 @@ int main()
 		// update everything
 		process_input(window);
 
-		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// bind to framebuffer and draw scene normally
@@ -515,7 +515,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 // utility function for loading a 2D texture from file
 // ---------------------------------------------------
-unsigned int load_texture(char const * path)
+unsigned int load_texture(char const * path, bool gamma_correction)
 {
 	unsigned int texture_id;
 	glGenTextures(1, &texture_id);
@@ -524,16 +524,22 @@ unsigned int load_texture(char const * path)
 	unsigned char *data = stbi_load(path, &width, &height, &nr_components, 0);
 	if (data)
 	{
-		GLenum format;
+		GLenum internal_format, data_format;
 		if (nr_components == 1)
-			format = GL_RED;
+			internal_format = data_format = GL_RED;
 		else if (nr_components == 3)
-			format = GL_RGB;
+		{
+			internal_format = (gamma_correction ? GL_SRGB : GL_RGB);
+			data_format = GL_RGB;
+		}
 		else if (nr_components == 4)
-			format = GL_RGBA;
+		{
+			internal_format = (gamma_correction ? GL_SRGB_ALPHA : GL_RGBA);
+			data_format = GL_RGBA;
+		}
 
 		glBindTexture(GL_TEXTURE_2D, texture_id);
-		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+		glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, data_format, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);

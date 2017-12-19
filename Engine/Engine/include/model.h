@@ -16,8 +16,8 @@
 
 /**
 * @brief	loads a texture with SOIL and returns the texture's ID
-* @param *filename		the filename of the texture
-* @param &directory		the directory path to the model files	
+* @param *filename			the filename of the texture
+* @param &directory			the directory path to the model files
 */
 unsigned int load_texture_from_filepath(const char *filename, const std::string &directory);
 
