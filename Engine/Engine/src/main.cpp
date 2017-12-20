@@ -42,6 +42,10 @@ bool first_mouse = true;
 //	Post-processing ---------------------------------------------------------
 int effect = 0;
 
+// Gamma Setting ------------------------------------------------------------
+bool gamma_enabled = false;
+bool gamma_key_pressed = false;
+
 
 int main()
 {
@@ -279,7 +283,8 @@ int main()
 	stbi_set_flip_vertically_on_load(false);
 	unsigned int skybox_texture = load_cubemap(skybox_faces_filepaths);
 	stbi_set_flip_vertically_on_load(true);
-	unsigned int wood_texture = load_texture("resources/textures/wood.png", true);
+	unsigned int wood_texture = load_texture("resources/textures/wood.png", false);
+	unsigned int wood_texture_gamma_corrected = load_texture("resources/textures/wood.png", true);
 
 	// --------------------------------------------------------------------------
 	//	framebuffer configuration -----------------------------------------------
@@ -399,9 +404,10 @@ int main()
 			blinn_phong_shader.use();
 			blinn_phong_shader.set_vec3("view_position", camera.m_position);
 			blinn_phong_shader.set_vec3("light_position", glm::vec3(0.0f));
+			blinn_phong_shader.set_bool("gamma_enabled", gamma_enabled);
 			glBindVertexArray(wood_vao);
 			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, wood_texture);
+			glBindTexture(GL_TEXTURE_2D, gamma_enabled ? wood_texture_gamma_corrected : wood_texture);
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 			glBindVertexArray(0);
 			
@@ -481,6 +487,16 @@ void process_input(GLFWwindow *window)
 		effect = 0;
 	if (glfwGetKey(window, GLFW_KEY_2))
 		effect = 1;
+
+	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && !gamma_key_pressed)
+	{
+		gamma_enabled = !gamma_enabled;
+		gamma_key_pressed = true;
+	}
+	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE)
+	{
+		gamma_key_pressed = false;
+	}
 }
 
 void mouse_callback(GLFWwindow* window, double x_pos, double y_pos)
