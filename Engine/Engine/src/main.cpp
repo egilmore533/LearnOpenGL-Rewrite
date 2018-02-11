@@ -24,8 +24,8 @@ unsigned int load_texture(char const * path, bool gamma_correction);
 unsigned int load_cubemap(std::vector<std::string> faces);
 
 //	Settings ------------------------------------------------------------------
-const unsigned int screen_width = 800;
-const unsigned int screen_height = 600;
+const unsigned int screen_width = 1280;
+const unsigned int screen_height = 720;
 const unsigned int samples = 4;
 
 //	Timing ------------------------------------------------------------------
@@ -41,10 +41,6 @@ bool first_mouse = true;
 
 //	Post-processing ---------------------------------------------------------
 int effect = 0;
-
-// Gamma Setting ------------------------------------------------------------
-bool gamma_enabled = false;
-bool gamma_key_pressed = false;
 
 
 int main()
@@ -95,8 +91,11 @@ int main()
 	Shader simple_shader("shaders/simple.vs", "shaders/simple.fs");
 	Shader post_processing_shader("shaders/simple.vs", "shaders/kernel.fs");
 	Shader skybox_shader("shaders/skybox.vs", "shaders/skybox.fs");
-	Shader blinn_phong_shader("shaders/blinn_phong.vs", "shaders/blinn_phong.fs");
-	
+
+	// shadows (depth map debugging)
+	Shader simple_depth_shader("shaders/shadow_mapping_depth.vs", "shaders/shadow_mapping_depth.fs");
+	Shader debug_depth_quad("shaders/debug_depth_quad.vs", "shaders/debug_depth_quad.fs");
+
 	// --------------------------------------------------------------------------
 	//	vertex data -------------------------------------------------------------
 	// --------------------------------------------------------------------------
@@ -167,17 +166,67 @@ int main()
 		"resources/textures/skybox/front.jpg"
 	};
 
-	// blinn-phong lighting
+	// depth mapping
 	float plane_vertices[] = {
 		// positions            // normals         // texcoords
-		 1.0f, -0.5f,  1.0f,  0.0f, 1.0f, 0.0f,  1.0f,  0.0f,
+		1.0f, -0.5f,  1.0f,  0.0f, 1.0f, 0.0f,  1.0f,  0.0f,
 		-1.0f, -0.5f,  1.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
 		-1.0f, -0.5f, -1.0f,  0.0f, 1.0f, 0.0f,   0.0f, 1.0f,
 
-		 1.0f, -0.5f,  1.0f,  0.0f, 1.0f, 0.0f,  1.0f,  0.0f,
+		1.0f, -0.5f,  1.0f,  0.0f, 1.0f, 0.0f,  1.0f,  0.0f,
 		-1.0f, -0.5f, -1.0f,  0.0f, 1.0f, 0.0f,   0.0f, 1.0f,
-		 1.0f, -0.5f, -1.0f,  0.0f, 1.0f, 0.0f,  1.0f, 1.0f
+		1.0f, -0.5f, -1.0f,  0.0f, 1.0f, 0.0f,  1.0f, 1.0f
 	};
+
+	// cubes
+	float cube_vertices[] = {
+		// positions        // normals            // texels
+		// back face
+		-1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
+		1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
+		1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f, // bottom-right         
+		1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
+		-1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
+		-1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f, // top-left
+		// front face
+		-1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+		1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f, // bottom-right
+		1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
+		1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
+		-1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f, // top-left
+		-1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+		// left face
+		-1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
+		-1.0f,  1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-left
+		-1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
+		-1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
+		-1.0f, -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-right
+		-1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
+		// right face
+		1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
+		1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
+		1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-right         
+		1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
+		1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
+		1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-left     
+		// bottom face
+		-1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
+		1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f, // top-left
+		1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
+		1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
+		-1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 0.0f, // bottom-right
+		-1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
+		// top face
+		-1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
+		1.0f,  1.0f , 1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
+		1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f, // top-right     
+		1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
+		-1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
+		-1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f  // bottom-left        
+	};
+
+	// lighting info
+	glm::vec3 light_pos(-2.0f, 4.0f, -1.0f);
 
 	// --------------------------------------------------------------------------
 	//	vertex array buffer configurations --------------------------------------
@@ -212,24 +261,39 @@ int main()
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
-	// blinn-phong lighting
-	unsigned int wood_vao, wood_vbo;
+	// depth debug quad vao
+	unsigned int debug_quad_vao, debug_quad_vbo;
 
-	glGenVertexArrays(1, &wood_vao);
-	glGenBuffers(1, &wood_vbo);
+	glGenVertexArrays(1, &debug_quad_vao);
+	glGenBuffers(1, &debug_quad_vbo);
 
-	glBindVertexArray(wood_vao);
-	glBindBuffer(GL_ARRAY_BUFFER, wood_vbo);
+	glBindVertexArray(debug_quad_vao);
+	glBindBuffer(GL_ARRAY_BUFFER, debug_quad_vbo);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(plane_vertices), &plane_vertices, GL_STATIC_DRAW);
 
-	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-
-	glEnableVertexAttribArray(1);
+	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-
-	glEnableVertexAttribArray(2);
+	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glEnableVertexAttribArray(2);
+
+	// cube vao
+	unsigned int cube_vao, cube_vbo;
+
+	glGenVertexArrays(1, &cube_vao);
+	glGenBuffers(1, &cube_vbo);
+
+	glBindVertexArray(cube_vao);
+	glBindBuffer(GL_ARRAY_BUFFER, cube_vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(cube_vertices), &cube_vertices, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glEnableVertexAttribArray(2);
 
 	glBindVertexArray(0);
 
@@ -239,10 +303,8 @@ int main()
 	
 	// first set the uniform block of the vertex shaders equal to the binding point (0)
 	unsigned int uniform_block_index_skybox = glGetUniformBlockIndex(skybox_shader.m_program_id, "matrices");
-	unsigned int uniform_block_index_blinn_phong = glGetUniformBlockIndex(blinn_phong_shader.m_program_id, "matrices");
 	
 	glUniformBlockBinding(skybox_shader.m_program_id, uniform_block_index_skybox, 0);
-	glUniformBlockBinding(blinn_phong_shader.m_program_id, uniform_block_index_blinn_phong, 0);
 	
 	// next create the actual uniform buffer object and bind the buffer to the binding point (0)
 	unsigned int ubo_matrices;
@@ -290,6 +352,31 @@ int main()
 	//	framebuffer configuration -----------------------------------------------
 	// --------------------------------------------------------------------------
 	
+
+
+	// depth map fbo
+	const unsigned int shadow_width = 1024, shadow_height = 1024;
+	unsigned int depth_map_fbo;
+	glGenFramebuffers(1, &depth_map_fbo);
+
+	// create depth texture
+	unsigned int depth_map;
+	glGenTextures(1, &depth_map);
+	glBindTexture(GL_TEXTURE_2D, depth_map);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, shadow_width, shadow_height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+	//attach the depth texture as FBO's depth buffer
+	glBindFramebuffer(GL_FRAMEBUFFER, depth_map_fbo);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_map, 0);
+	glDrawBuffer(GL_NONE);
+	glReadBuffer(GL_NONE);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
 	// configure MSAA frambuffer
 	unsigned int framebuffer_object;
 	glGenFramebuffers(1, &framebuffer_object);
@@ -355,13 +442,14 @@ int main()
 	post_processing_shader.use();
 	post_processing_shader.set_int("screen_texture", 0);
 
-	blinn_phong_shader.use();
-	blinn_phong_shader.set_int("floor_texture", 0);
+	debug_depth_quad.use();
+	debug_depth_quad.set_int("depth_map", 0);
+
+	glEnable(GL_DEPTH_TEST);
 
 	// --------------------------------------------------------------------------
 	//	Main Loop ---------------------------------------------------------------
 	// --------------------------------------------------------------------------
-
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -373,7 +461,62 @@ int main()
 		// update everything
 		process_input(window);
 
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		glViewport(0, 0, shadow_width, shadow_height);
+		glBindFramebuffer(GL_FRAMEBUFFER, depth_map_fbo);
+			
+			glEnable(GL_DEPTH_TEST);
+
+			glClear(GL_DEPTH_BUFFER_BIT);
+			glm::mat4 light_projection, light_view, light_space_matrix;
+			float near_plane = 1.0f, far_plane = 7.5f;
+			light_projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
+			light_view = glm::lookAt(light_pos, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0));
+			light_space_matrix = light_projection * light_view;
+
+			simple_depth_shader.use();
+			simple_depth_shader.set_mat4("light_space_matrix", light_space_matrix);
+
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, wood_texture);
+
+			// floor
+			glm::mat4 model;
+			simple_depth_shader.set_mat4("model", model);
+			glBindVertexArray(debug_quad_vao);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+
+			// cubes
+			model = glm::mat4();
+			model = glm::translate(model, glm::vec3(0.0f, 1.5f, 0.0f));
+			model = glm::scale(model, glm::vec3(0.5f));
+			simple_depth_shader.set_mat4("model", model);
+			glBindVertexArray(cube_vao);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+			glBindVertexArray(0);
+
+			model = glm::mat4();
+			model = glm::translate(model, glm::vec3(2.0f, 0.0f, 1.0));
+			model = glm::scale(model, glm::vec3(0.5f));
+			simple_depth_shader.set_mat4("model", model);
+			glBindVertexArray(cube_vao);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+			glBindVertexArray(0);
+
+			model = glm::mat4();
+			model = glm::translate(model, glm::vec3(-1.0f, 0.0f, 2.0));
+			model = glm::rotate(model, glm::radians(60.0f), glm::normalize(glm::vec3(1.0f, 0.0f, 1.0f)));
+			model = glm::scale(model, glm::vec3(0.25f));
+			simple_depth_shader.set_mat4("model", model);
+			glBindVertexArray(cube_vao);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+			glBindVertexArray(0);
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		glViewport(0, 0, screen_width, screen_height);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// bind to framebuffer and draw scene normally
@@ -388,7 +531,14 @@ int main()
 
 			glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-			//glEnable(GL_CULL_FACE);
+
+			debug_depth_quad.use();
+			debug_depth_quad.set_float("near_plane", near_plane);
+			debug_depth_quad.set_float("far_plane", far_plane);
+			glBindVertexArray(quad_vao);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, depth_map);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
 
 			// update the projection and view matrices inside the uniform block
 			projection = glm::perspective(glm::radians(camera.m_zoom), (float)screen_width / (float)screen_height, 0.1f, 1000.0f);
@@ -400,16 +550,6 @@ int main()
 			glBindBuffer(GL_UNIFORM_BUFFER, ubo_matrices);
 			glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
 			glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
-			blinn_phong_shader.use();
-			blinn_phong_shader.set_vec3("view_position", camera.m_position);
-			blinn_phong_shader.set_vec3("light_position", glm::vec3(0.0f));
-			blinn_phong_shader.set_bool("gamma_enabled", gamma_enabled);
-			glBindVertexArray(wood_vao);
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, gamma_enabled ? wood_texture_gamma_corrected : wood_texture);
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-			glBindVertexArray(0);
 			
 			/*
 			glDepthFunc(GL_LEQUAL);
@@ -427,7 +567,6 @@ int main()
 		//	Finished Drawing "Scene" ------------------------------------------------
 		// --------------------------------------------------------------------------
 
-
 		// after drawing scene blit multisampled buffers to normal colorbuffer of intermediate fbo
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer_object);
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, intermediate_framebuffer_object);
@@ -437,7 +576,7 @@ int main()
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
-		glDisable(GL_DEPTH_TEST);		
+		glDisable(GL_DEPTH_TEST);
 
 		switch (effect)
 		{
@@ -448,7 +587,7 @@ int main()
 			post_processing_shader.use();
 			break;
 		}
-		
+
 		glBindVertexArray(quad_vao);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, screen_texture);
@@ -487,16 +626,6 @@ void process_input(GLFWwindow *window)
 		effect = 0;
 	if (glfwGetKey(window, GLFW_KEY_2))
 		effect = 1;
-
-	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && !gamma_key_pressed)
-	{
-		gamma_enabled = !gamma_enabled;
-		gamma_key_pressed = true;
-	}
-	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE)
-	{
-		gamma_key_pressed = false;
-	}
 }
 
 void mouse_callback(GLFWwindow* window, double x_pos, double y_pos)

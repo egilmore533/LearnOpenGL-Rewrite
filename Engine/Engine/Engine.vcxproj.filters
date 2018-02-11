@@ -61,6 +61,12 @@
     <Filter Include="Shader Programs\Blinn-Phong Lighting">
       <UniqueIdentifier>{ad791568-1232-4189-b642-97ddff91f645}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shader Programs\SimpleDepthShader">
+      <UniqueIdentifier>{b075b11e-b57a-43fa-b678-76257916817b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shader Programs\DepthDebugger">
+      <UniqueIdentifier>{a7e826c4-a170-49e5-b8c9-01c65b104437}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -192,6 +198,18 @@
     </None>
     <None Include="shaders\blinn_phong.fs">
       <Filter>Shader Programs\Blinn-Phong Lighting</Filter>
+    </None>
+    <None Include="shaders\shadow_mapping_depth.vs">
+      <Filter>Shader Programs\SimpleDepthShader</Filter>
+    </None>
+    <None Include="shaders\shadow_mapping_depth.fs">
+      <Filter>Shader Programs\SimpleDepthShader</Filter>
+    </None>
+    <None Include="shaders\debug_depth_quad.vs">
+      <Filter>Shader Programs\DepthDebugger</Filter>
+    </None>
+    <None Include="shaders\debug_depth_quad.fs">
+      <Filter>Shader Programs\DepthDebugger</Filter>
     </None>
   </ItemGroup>
 </Project>
