@@ -95,6 +95,7 @@ int main()
 	// shadows (depth map debugging)
 	Shader simple_depth_shader("shaders/shadow_mapping_depth.vs", "shaders/shadow_mapping_depth.fs");
 	Shader debug_depth_quad("shaders/debug_depth_quad.vs", "shaders/debug_depth_quad.fs");
+	Shader shadow_mapping_shader("shaders/shadow_mapping.vs", "shaders/shadow_mapping.fs");
 
 	// --------------------------------------------------------------------------
 	//	vertex data -------------------------------------------------------------
@@ -169,13 +170,13 @@ int main()
 	// depth mapping
 	float plane_vertices[] = {
 		// positions            // normals         // texcoords
-		1.0f, -0.5f,  1.0f,  0.0f, 1.0f, 0.0f,  1.0f,  0.0f,
-		-1.0f, -0.5f,  1.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
-		-1.0f, -0.5f, -1.0f,  0.0f, 1.0f, 0.0f,   0.0f, 1.0f,
+		25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,  25.0f,  0.0f,
+		-25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
+		-25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,   0.0f, 25.0f,
 
-		1.0f, -0.5f,  1.0f,  0.0f, 1.0f, 0.0f,  1.0f,  0.0f,
-		-1.0f, -0.5f, -1.0f,  0.0f, 1.0f, 0.0f,   0.0f, 1.0f,
-		1.0f, -0.5f, -1.0f,  0.0f, 1.0f, 0.0f,  1.0f, 1.0f
+		25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,  25.0f,  0.0f,
+		-25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,   0.0f, 25.0f,
+		25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,  25.0f, 25.0f
 	};
 
 	// cubes
@@ -303,8 +304,10 @@ int main()
 	
 	// first set the uniform block of the vertex shaders equal to the binding point (0)
 	unsigned int uniform_block_index_skybox = glGetUniformBlockIndex(skybox_shader.m_program_id, "matrices");
-	
+	unsigned int uniform_block_index_shadows = glGetUniformBlockIndex(shadow_mapping_shader.m_program_id, "matrices");
+
 	glUniformBlockBinding(skybox_shader.m_program_id, uniform_block_index_skybox, 0);
+	glUniformBlockBinding(shadow_mapping_shader.m_program_id, uniform_block_index_shadows, 0);
 	
 	// next create the actual uniform buffer object and bind the buffer to the binding point (0)
 	unsigned int ubo_matrices;
@@ -351,8 +354,6 @@ int main()
 	// --------------------------------------------------------------------------
 	//	framebuffer configuration -----------------------------------------------
 	// --------------------------------------------------------------------------
-	
-
 
 	// depth map fbo
 	const unsigned int shadow_width = 1024, shadow_height = 1024;
@@ -445,6 +446,10 @@ int main()
 	debug_depth_quad.use();
 	debug_depth_quad.set_int("depth_map", 0);
 
+	shadow_mapping_shader.use();
+	shadow_mapping_shader.set_int("diffuse_texture", 0);
+	shadow_mapping_shader.set_int("shadow_map", 1);
+
 	glEnable(GL_DEPTH_TEST);
 
 	// --------------------------------------------------------------------------
@@ -464,6 +469,7 @@ int main()
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		// 1. render depth of scene to texture (from light's perspective )
 		glViewport(0, 0, shadow_width, shadow_height);
 		glBindFramebuffer(GL_FRAMEBUFFER, depth_map_fbo);
 			
@@ -516,10 +522,11 @@ int main()
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+		// reset viewport 
 		glViewport(0, 0, screen_width, screen_height);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// bind to framebuffer and draw scene normally
+		// bind to framebuffer and draw scene using the generated depth/shadow map
 		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_object);
 
 		// --------------------------------------------------------------------------
@@ -532,14 +539,6 @@ int main()
 			glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-			debug_depth_quad.use();
-			debug_depth_quad.set_float("near_plane", near_plane);
-			debug_depth_quad.set_float("far_plane", far_plane);
-			glBindVertexArray(quad_vao);
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, depth_map);
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-
 			// update the projection and view matrices inside the uniform block
 			projection = glm::perspective(glm::radians(camera.m_zoom), (float)screen_width / (float)screen_height, 0.1f, 1000.0f);
 			glBindBuffer(GL_UNIFORM_BUFFER, ubo_matrices);
@@ -550,6 +549,48 @@ int main()
 			glBindBuffer(GL_UNIFORM_BUFFER, ubo_matrices);
 			glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
 			glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+			shadow_mapping_shader.use();
+			shadow_mapping_shader.set_vec3("view_position", camera.m_position);
+			shadow_mapping_shader.set_vec3("light_position", light_pos);
+			shadow_mapping_shader.set_mat4("light_space_matrix", light_space_matrix);
+
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, wood_texture);
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, depth_map);
+
+			// floor
+			model = glm::mat4();
+			shadow_mapping_shader.set_mat4("model", model);
+			glBindVertexArray(debug_quad_vao);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+
+			// cubes
+			model = glm::mat4();
+			model = glm::translate(model, glm::vec3(0.0f, 1.5f, 0.0f));
+			model = glm::scale(model, glm::vec3(0.5f));
+			shadow_mapping_shader.set_mat4("model", model);
+			glBindVertexArray(cube_vao);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+			glBindVertexArray(0);
+
+			model = glm::mat4();
+			model = glm::translate(model, glm::vec3(2.0f, 0.0f, 1.0));
+			model = glm::scale(model, glm::vec3(0.5f));
+			shadow_mapping_shader.set_mat4("model", model);
+			glBindVertexArray(cube_vao);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+			glBindVertexArray(0);
+
+			model = glm::mat4();
+			model = glm::translate(model, glm::vec3(-1.0f, 0.0f, 2.0));
+			model = glm::rotate(model, glm::radians(60.0f), glm::normalize(glm::vec3(1.0f, 0.0f, 1.0f)));
+			model = glm::scale(model, glm::vec3(0.25f));
+			shadow_mapping_shader.set_mat4("model", model);
+			glBindVertexArray(cube_vao);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+			glBindVertexArray(0);
 			
 			/*
 			glDepthFunc(GL_LEQUAL);

@@ -67,6 +67,9 @@
     <Filter Include="Shader Programs\DepthDebugger">
       <UniqueIdentifier>{a7e826c4-a170-49e5-b8c9-01c65b104437}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shader Programs\Shadow Mapping">
+      <UniqueIdentifier>{d020c64a-ddf8-4138-9159-cbae06ad115b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -210,6 +213,12 @@
     </None>
     <None Include="shaders\debug_depth_quad.fs">
       <Filter>Shader Programs\DepthDebugger</Filter>
+    </None>
+    <None Include="shaders\shadow_mapping.vs">
+      <Filter>Shader Programs\Shadow Mapping</Filter>
+    </None>
+    <None Include="shaders\shadow_mapping.fs">
+      <Filter>Shader Programs\Shadow Mapping</Filter>
     </None>
   </ItemGroup>
 </Project>

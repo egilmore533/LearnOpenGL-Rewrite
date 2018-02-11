@@ -195,6 +195,8 @@
     <None Include="shaders\reflection.fs" />
     <None Include="shaders\reflection.vs" />
     <None Include="shaders\refraction.fs" />
+    <None Include="shaders\shadow_mapping.fs" />
+    <None Include="shaders\shadow_mapping.vs" />
     <None Include="shaders\shadow_mapping_depth.fs" />
     <None Include="shaders\shadow_mapping_depth.vs" />
     <None Include="shaders\simple.fs" />
