@@ -21,6 +21,10 @@ float shadow_calculation(vec4 fragment_position_light_space, vec3 light_directio
     vec3 projection_coordinates = fragment_position_light_space.xyz / fragment_position_light_space.w;
     // transform to [0,1] range
     projection_coordinates = projection_coordinates * 0.5 + 0.5;
+
+	if(projection_coordinates.z > 1.0)
+		return 0.0;
+
     // get closest depth value from light's perspective (using [0,1] range projection_coordinates as coordinates)
     float closest_depth = texture(shadow_map, projection_coordinates.xy).r; 
     // get depth of current fragment from light's perspective
