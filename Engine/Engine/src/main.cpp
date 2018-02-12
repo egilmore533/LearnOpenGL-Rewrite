@@ -91,6 +91,7 @@ int main()
 	Shader simple_shader("shaders/simple.vs", "shaders/simple.fs");
 	Shader post_processing_shader("shaders/simple.vs", "shaders/kernel.fs");
 	Shader skybox_shader("shaders/skybox.vs", "shaders/skybox.fs");
+	Shader lamp_shader("shaders/lamp.vs", "shaders/lamp.fs");
 
 	// shadows (depth map debugging)
 	Shader simple_depth_shader("shaders/shadow_mapping_depth.vs", "shaders/shadow_mapping_depth.fs");
@@ -305,9 +306,11 @@ int main()
 	// first set the uniform block of the vertex shaders equal to the binding point (0)
 	unsigned int uniform_block_index_skybox = glGetUniformBlockIndex(skybox_shader.m_program_id, "matrices");
 	unsigned int uniform_block_index_shadows = glGetUniformBlockIndex(shadow_mapping_shader.m_program_id, "matrices");
+	unsigned int uniform_block_index_lamp = glGetUniformBlockIndex(lamp_shader.m_program_id, "matrices");
 
 	glUniformBlockBinding(skybox_shader.m_program_id, uniform_block_index_skybox, 0);
 	glUniformBlockBinding(shadow_mapping_shader.m_program_id, uniform_block_index_shadows, 0);
+	glUniformBlockBinding(lamp_shader.m_program_id, uniform_block_index_lamp, 0);
 	
 	// next create the actual uniform buffer object and bind the buffer to the binding point (0)
 	unsigned int ubo_matrices;
@@ -588,6 +591,15 @@ int main()
 			model = glm::rotate(model, glm::radians(60.0f), glm::normalize(glm::vec3(1.0f, 0.0f, 1.0f)));
 			model = glm::scale(model, glm::vec3(0.25f));
 			shadow_mapping_shader.set_mat4("model", model);
+			glBindVertexArray(cube_vao);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+			glBindVertexArray(0);
+
+			lamp_shader.use();
+			model = glm::mat4();
+			model = glm::translate(model, light_pos);
+			model = glm::scale(model, glm::vec3(0.25f));
+			lamp_shader.set_mat4("model", model);
 			glBindVertexArray(cube_vao);
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 			glBindVertexArray(0);
