@@ -25,15 +25,26 @@ float shadow_calculation(vec4 fragment_position_light_space, vec3 light_directio
 	if(projection_coordinates.z > 1.0)
 		return 0.0;
 
-    // get closest depth value from light's perspective (using [0,1] range projection_coordinates as coordinates)
-    float closest_depth = texture(shadow_map, projection_coordinates.xy).r; 
     // get depth of current fragment from light's perspective
     float current_depth = projection_coordinates.z;
     // check whether current frag pos is in shadow
 
 	// bias calculation to remove some shadow acne based on the surface angle towards the light
 	float bias = max(0.05 * (1.0 - dot(normal, light_direction)), 0.005);  
-    float shadow = current_depth - bias > closest_depth  ? 1.0 : 0.0;
+	
+	// sample more than once from the depth map, each time with a slightly different coordinate and combine each of the results for an average to get a softer shadow.
+	float shadow = 0.0;
+	vec2 texel_size = 1.0 / textureSize(shadow_map, 0);
+	for(int x = -1; x <= 1; x++)
+	{
+		for(int y = -1; y <= 1; y++)
+		{
+			float pcf_depth = texture(shadow_map, projection_coordinates.xy + vec2(x, y) * texel_size).r;
+			shadow += current_depth - bias > pcf_depth ? 1.0 : 0.0;
+		}
+	}
+
+    shadow /= 9.0;
 
 	return shadow;
 }
