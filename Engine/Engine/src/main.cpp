@@ -22,6 +22,7 @@ void scroll_callback(GLFWwindow* window, double x_offset, double y_offset);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 unsigned int load_texture(char const * path, bool gamma_correction);
 unsigned int load_cubemap(std::vector<std::string> faces);
+void render_scene(Shader shader, unsigned int quad_vao, unsigned int cube_vao);
 
 //	Settings ------------------------------------------------------------------
 const unsigned int screen_width = 1280;
@@ -493,37 +494,7 @@ int main()
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, wood_texture);
 
-			// floor
-			glm::mat4 model;
-			simple_depth_shader.set_mat4("model", model);
-			glBindVertexArray(debug_quad_vao);
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-
-			// cubes
-			model = glm::mat4();
-			model = glm::translate(model, glm::vec3(0.0f, 1.5f, 0.0f));
-			model = glm::scale(model, glm::vec3(0.5f));
-			simple_depth_shader.set_mat4("model", model);
-			glBindVertexArray(cube_vao);
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-			glBindVertexArray(0);
-
-			model = glm::mat4();
-			model = glm::translate(model, glm::vec3(2.0f, 0.0f, 1.0));
-			model = glm::scale(model, glm::vec3(0.5f));
-			simple_depth_shader.set_mat4("model", model);
-			glBindVertexArray(cube_vao);
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-			glBindVertexArray(0);
-
-			model = glm::mat4();
-			model = glm::translate(model, glm::vec3(-1.0f, 0.0f, 2.0));
-			model = glm::rotate(model, glm::radians(60.0f), glm::normalize(glm::vec3(1.0f, 0.0f, 1.0f)));
-			model = glm::scale(model, glm::vec3(0.25f));
-			simple_depth_shader.set_mat4("model", model);
-			glBindVertexArray(cube_vao);
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-			glBindVertexArray(0);
+			render_scene(simple_depth_shader, debug_quad_vao, cube_vao);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -565,40 +536,10 @@ int main()
 			glActiveTexture(GL_TEXTURE1);
 			glBindTexture(GL_TEXTURE_2D, depth_map);
 
-			// floor
-			model = glm::mat4();
-			shadow_mapping_shader.set_mat4("model", model);
-			glBindVertexArray(debug_quad_vao);
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-
-			// cubes
-			model = glm::mat4();
-			model = glm::translate(model, glm::vec3(0.0f, 1.5f, 0.0f));
-			model = glm::scale(model, glm::vec3(0.5f));
-			shadow_mapping_shader.set_mat4("model", model);
-			glBindVertexArray(cube_vao);
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-			glBindVertexArray(0);
-
-			model = glm::mat4();
-			model = glm::translate(model, glm::vec3(2.0f, 0.0f, 1.0));
-			model = glm::scale(model, glm::vec3(0.5f));
-			shadow_mapping_shader.set_mat4("model", model);
-			glBindVertexArray(cube_vao);
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-			glBindVertexArray(0);
-
-			model = glm::mat4();
-			model = glm::translate(model, glm::vec3(-1.0f, 0.0f, 2.0));
-			model = glm::rotate(model, glm::radians(60.0f), glm::normalize(glm::vec3(1.0f, 0.0f, 1.0f)));
-			model = glm::scale(model, glm::vec3(0.25f));
-			shadow_mapping_shader.set_mat4("model", model);
-			glBindVertexArray(cube_vao);
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-			glBindVertexArray(0);
+			render_scene(shadow_mapping_shader, debug_quad_vao, cube_vao);
 
 			lamp_shader.use();
-			model = glm::mat4();
+			glm::mat4 model = glm::mat4();
 			model = glm::translate(model, light_pos);
 			model = glm::scale(model, glm::vec3(0.25f));
 			lamp_shader.set_mat4("model", model);
@@ -787,4 +728,39 @@ unsigned int load_cubemap(std::vector<std::string> faces)
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
 	return texture_id;
+}
+
+void render_scene(Shader shader, unsigned int quad_vao, unsigned int cube_vao)
+{
+	// floor
+	glm::mat4 model;
+	shader.set_mat4("model", model);
+	glBindVertexArray(quad_vao);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+
+	// cubes
+	model = glm::mat4();
+	model = glm::translate(model, glm::vec3(0.0f, 1.5f, 0.0f));
+	model = glm::scale(model, glm::vec3((sin(current_time) + 1.0) / 2.0));
+	shader.set_mat4("model", model);
+	glBindVertexArray(cube_vao);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+	glBindVertexArray(0);
+
+	model = glm::mat4();
+	model = glm::translate(model, glm::vec3(2.0f, 0.0f, 1.0));
+	model = glm::scale(model, glm::vec3(0.5f));
+	shader.set_mat4("model", model);
+	glBindVertexArray(cube_vao);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+	glBindVertexArray(0);
+
+	model = glm::mat4();
+	model = glm::translate(model, glm::vec3(-1.0f, 0.0f, 2.0));
+	model = glm::rotate(model, glm::radians(60.0f), glm::normalize(glm::vec3(1.0f, 0.0f, 1.0f)));
+	model = glm::scale(model, glm::vec3(0.25f));
+	shader.set_mat4("model", model);
+	glBindVertexArray(cube_vao);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+	glBindVertexArray(0);
 }
