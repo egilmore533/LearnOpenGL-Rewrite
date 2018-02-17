@@ -70,6 +70,12 @@
     <Filter Include="Shader Programs\Shadow Mapping">
       <UniqueIdentifier>{d020c64a-ddf8-4138-9159-cbae06ad115b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shader Programs\Cube Map Depth">
+      <UniqueIdentifier>{10bfa2f9-5a3d-4d76-b04f-731bcd72a913}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shader Programs\Point Shadow Mapping">
+      <UniqueIdentifier>{cb49f5ff-dde8-4353-bb8c-f5203f12607b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -219,6 +225,21 @@
     </None>
     <None Include="shaders\shadow_mapping.fs">
       <Filter>Shader Programs\Shadow Mapping</Filter>
+    </None>
+    <None Include="shaders\cube_map_depth.vs">
+      <Filter>Shader Programs\Cube Map Depth</Filter>
+    </None>
+    <None Include="shaders\cube_map_depth.fs">
+      <Filter>Shader Programs\Cube Map Depth</Filter>
+    </None>
+    <None Include="shaders\cube_map_depth.gs">
+      <Filter>Shader Programs\Cube Map Depth</Filter>
+    </None>
+    <None Include="shaders\point_shadow_mapping.vs">
+      <Filter>Shader Programs\Point Shadow Mapping</Filter>
+    </None>
+    <None Include="shaders\point_shadow_mapping.fs">
+      <Filter>Shader Programs\Point Shadow Mapping</Filter>
     </None>
   </ItemGroup>
 </Project>

@@ -173,6 +173,9 @@
     <None Include="shaders\blending.fs" />
     <None Include="shaders\blinn_phong.fs" />
     <None Include="shaders\blinn_phong.vs" />
+    <None Include="shaders\cube_map_depth.fs" />
+    <None Include="shaders\cube_map_depth.gs" />
+    <None Include="shaders\cube_map_depth.vs" />
     <None Include="shaders\debug_depth_quad.fs" />
     <None Include="shaders\debug_depth_quad.vs" />
     <None Include="shaders\explode.fs" />
@@ -192,6 +195,8 @@
     <None Include="shaders\normal_visualizer.gs" />
     <None Include="shaders\normal_visualizer.vs" />
     <None Include="shaders\outline.fs" />
+    <None Include="shaders\point_shadow_mapping.fs" />
+    <None Include="shaders\point_shadow_mapping.vs" />
     <None Include="shaders\reflection.fs" />
     <None Include="shaders\reflection.vs" />
     <None Include="shaders\refraction.fs" />
