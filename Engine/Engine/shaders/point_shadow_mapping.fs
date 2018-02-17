@@ -21,16 +21,29 @@ float shadow_calculation(vec3 frag_position)
 {
 	// get direction from frag_position to light_position
 	vec3 frag_to_light = frag_position - light_position;
-	// use the direction to sample from the cube map
-	float closest_depth = texture(depth_cube_map, frag_to_light).r;
-	// it is currently in linear range between [0;1] so transform it back to original depth value
-	closest_depth *= far_plane;
 	// now get current linear depth as the length between the fragment and the light_position
 	float current_depth = length(frag_to_light);
-	// test if current depth is in shadow or not
+	// take samples from around the fragment position and average the results for a smooth shadow
+	float shadow = 0.0;
 	float bias = 0.05;
-	float shadow = current_depth - bias > closest_depth ? 1.0 : 0.0;
+	float samples = 4.0;
+	float offset = 0.1;
+	for(float x = -offset; x < offset; x += offset / (samples * 0.5))
+	{
+		for(float y = -offset; y < offset; y += offset / (samples * 0.5))
+		{
+			for(float z = -offset; z < offset; z += offset / (samples * 0.5))
+			{
+				float closest_depth = texture(depth_cube_map, frag_to_light + vec3(x,y,z)).r;
+				closest_depth *= far_plane;
+				if(current_depth - bias > closest_depth)
+					shadow += 1.0;
+			}
+		}
+	}
 
+	shadow /= (samples * samples * samples);
+	
 	return shadow;
 }
 
@@ -61,4 +74,10 @@ void main()
 	vec3 lighting = (ambient_component + (1.0 - shadow) * (diffuse_component + specular_component)) * color;
 
 	frag_color = vec4(lighting, 1.0);
+	
+	// this will visualize the depth_cube_map for debugging
+	//vec3 frag_to_light = fs_in.fragment_position - light_position;
+	//float closest_depth = texture(depth_cube_map, frag_to_light).r;
+	//closest_depth *= far_plane;
+	//frag_color = vec4(vec3(closest_depth / far_plane), 1.0);  
 }
