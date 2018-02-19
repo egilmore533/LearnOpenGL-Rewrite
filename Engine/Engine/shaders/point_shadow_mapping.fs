@@ -17,6 +17,16 @@ uniform vec3 view_position;
 uniform float far_plane;
 uniform bool shadows;
 
+// array of offset direction for sampling
+vec3 grid_sampling_disk[20] = vec3[]
+(
+   vec3(1, 1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1, 1,  1), 
+   vec3(1, 1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1, 1, -1),
+   vec3(1, 1,  0), vec3( 1, -1,  0), vec3(-1, -1,  0), vec3(-1, 1,  0),
+   vec3(1, 0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1, 0, -1),
+   vec3(0, 1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0, 1, -1)
+);
+
 float shadow_calculation(vec3 frag_position)
 {
 	// get direction from frag_position to light_position
@@ -25,24 +35,19 @@ float shadow_calculation(vec3 frag_position)
 	float current_depth = length(frag_to_light);
 	// take samples from around the fragment position and average the results for a smooth shadow
 	float shadow = 0.0;
-	float bias = 0.05;
-	float samples = 4.0;
-	float offset = 0.1;
-	for(float x = -offset; x < offset; x += offset / (samples * 0.5))
+	float bias = 0.15;
+	int samples = 20;
+	float view_distance = length(view_position - frag_position);
+	float disk_radius = (1.0 + (view_distance / far_plane)) / 25.0;
+	for(int i = 0; i < samples; i++)
 	{
-		for(float y = -offset; y < offset; y += offset / (samples * 0.5))
-		{
-			for(float z = -offset; z < offset; z += offset / (samples * 0.5))
-			{
-				float closest_depth = texture(depth_cube_map, frag_to_light + vec3(x,y,z)).r;
-				closest_depth *= far_plane;
-				if(current_depth - bias > closest_depth)
-					shadow += 1.0;
-			}
-		}
+		float closest_depth = texture(depth_cube_map, frag_to_light + grid_sampling_disk[i] * disk_radius).r;
+		closest_depth *= far_plane;
+		if(current_depth - bias > closest_depth)
+			shadow += 1.0;
 	}
 
-	shadow /= (samples * samples * samples);
+	shadow /= float(samples);
 	
 	return shadow;
 }
